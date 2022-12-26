@@ -4,13 +4,21 @@
 // Client-side logic for the field monitor display.
 
 var websocket;
+var currentMatchId;
 var redSide;
 var blueSide;
 var lowBatteryThreshold = 8;
 var highBtuThreshold = 4.0;
 
-// Handles a websocket message to update the team connection status.
+
 var handleArenaStatus = function(data) {
+  // If getting data for the wrong match (e.g. after a server restart), reload the page.
+  if (currentMatchId == null) {
+    currentMatchId = data.MatchId;
+  } else if (currentMatchId !== data.MatchId) {
+    location.reload();
+  }
+	
   $.each(data.AllianceStations, function(station, stationStatus) {
     // Select the DOM elements corresponding to the team station.
     var teamElementPrefix;
@@ -28,6 +36,7 @@ var handleArenaStatus = function(data) {
     var teamRadioTextElement = $(teamElementPrefix + "Radio span");
     var teamRobotElement = $(teamElementPrefix + "Robot");
     var teamBypassElement = $(teamElementPrefix + "Bypass");
+    var teamBandwidthElement = $(teamElementPrefix + "Bandwidth");
 
     teamNotesTextElement.attr("data-station", station);
 
@@ -87,19 +96,20 @@ var handleArenaStatus = function(data) {
       } else {
         teamRobotElement.text(dsConn.BatteryVoltage.toFixed(1) + "V");
       }
-      var btuOkay = wifiStatus.MBits < highBtuThreshold && dsConn.RobotLinked;
-      if (wifiStatus.MBits >= 0.01) {
-        teamBandwidthElement.text(wifiStatus.MBits.toFixed(2)+ "Mb");
-        teamBandwidthElement.attr("data-status-ok", btuOkay);
+      console.log(dsConn.Bandwidth);
+      if (dsConn.Bandwidth > 0.01) {
+        teamBandwidthElement.text(dsConn.Bandwidth.toFixed(1));
+        teamBandwidthElement.attr("data-status-ok", true);
       } else {
         teamBandwidthElement.text("-");
-        teamBandwidthElement.attr("data-status-ok", btuOkay);
       }
     } else {
       teamDsElement.attr("data-status-ok", "");
       teamDsElement.text("DS");
       teamRobotElement.attr("data-status-ok", "");
       teamRobotElement.text("RBT");
+      teamBandwidthElement.attr("data-status-ok", "");
+      teamBandwidthElement.text("-");
 
       // Format the robot status box according to whether the AP is configured with the correct SSID.
       var expectedTeamId = stationStatus.Team ? stationStatus.Team.Id : 0;
@@ -125,6 +135,32 @@ var handleArenaStatus = function(data) {
       teamBypassElement.text("ES");
     }
   });
+};
+
+// Handles a websocket message to update the match time countdown.
+var handleMatchTime = function(data) {
+  translateMatchTime(data, function(matchState, matchStateText, countdownSec) {
+    $("#matchState").text(matchStateText);
+    $("#matchTime").text(countdownSec);
+    });
+};
+
+// Handles a websocket message to update the match score.
+var handleRealtimeScore = function(data,reversed) {
+
+    if (reversed === "true") {
+      $("#rightScore").text(data.Red.ScoreSummary.Score);
+      $("#leftScore").text(data.Blue.ScoreSummary.Score);
+    } else {
+      $("#rightScore").text(data.Blue.ScoreSummary.Score);
+      $("#leftScore").text(data.Red.ScoreSummary.Score);
+
+    }
+};
+
+// Handles a websocket message to update current match
+var handleMatchLoad = function(data) {
+  $("#matchName").text(data.MatchType + " Match " + data.Match.DisplayName);
 };
 
 // Handles a websocket message to update the event status message.
@@ -171,5 +207,9 @@ $(function() {
   websocket = new CheesyWebsocket("/displays/field_monitor/websocket", {
     arenaStatus: function(event) { handleArenaStatus(event.data); },
     eventStatus: function(event) { handleEventStatus(event.data); },
+    matchLoad: function(event) { handleMatchLoad(event.data); },
+    matchTiming: function(event) { handleMatchTiming(event.data); },
+    matchTime: function(event) { handleMatchTime(event.data); },
+    realtimeScore: function(event) { handleRealtimeScore(event.data,reversed); },
   });
 });
