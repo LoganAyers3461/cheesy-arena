@@ -7,6 +7,7 @@ var websocket;
 var redSide;
 var blueSide;
 var lowBatteryThreshold = 8;
+var highBtuThreshold = 4.0;
 
 // Handles a websocket message to update the team connection status.
 var handleArenaStatus = function(data) {
@@ -85,6 +86,14 @@ var handleArenaStatus = function(data) {
         teamRobotElement.text(stationStatus.DsConn.SecondsSinceLastRobotLink.toFixed());
       } else {
         teamRobotElement.text(dsConn.BatteryVoltage.toFixed(1) + "V");
+      }
+      var btuOkay = wifiStatus.MBits < highBtuThreshold && dsConn.RobotLinked;
+      if (wifiStatus.MBits >= 0.01) {
+        teamBandwidthElement.text(wifiStatus.MBits.toFixed(2)+ "Mb");
+        teamBandwidthElement.attr("data-status-ok", btuOkay);
+      } else {
+        teamBandwidthElement.text("-");
+        teamBandwidthElement.attr("data-status-ok", btuOkay);
       }
     } else {
       teamDsElement.attr("data-status-ok", "");
