@@ -8,8 +8,12 @@
   cursor: default;
 }
 .btn[disabled] {
-  color: #000;
+  color: rgb(255, 255, 255);
   opacity: 0.2;
+}
+
+th {
+  color: white;
 }
 
 /* New styles. */

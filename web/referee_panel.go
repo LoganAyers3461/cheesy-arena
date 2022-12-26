@@ -7,15 +7,16 @@ package web
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/mitchellh/mapstructure"
-	"io"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 // Renders the referee interface for assigning fouls.
@@ -97,7 +98,13 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 	defer ws.Close()
 
 	// Subscribe the websocket to the notifiers whose messages will be passed on to the client, in a separate goroutine.
-	go ws.HandleNotifiers(web.arena.MatchLoadNotifier, web.arena.ReloadDisplaysNotifier)
+	go ws.HandleNotifiers(web.arena.MatchLoadNotifier,
+		web.arena.ReloadDisplaysNotifier,
+		web.arena.MatchTimingNotifier,
+		web.arena.ArenaStatusNotifier,
+		web.arena.MatchTimeNotifier,
+		web.arena.RealtimeScoreNotifier,
+		web.arena.ScoringStatusNotifier)
 
 	// Loop, waiting for commands and responding to them, until the client closes the connection.
 	for {
@@ -125,7 +132,7 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			}
 
 			// Add the foul to the correct alliance's list.
-			foul := game.Foul{RuleId: args.RuleId, TeamId: args.TeamId, TimeInMatchSec: web.arena.MatchTimeSec()}
+			foul := game.Foul{RuleId: args.RuleId, TimeInMatchSec: web.arena.MatchTimeSec()}
 			if args.Alliance == "red" {
 				web.arena.RedRealtimeScore.CurrentScore.Fouls =
 					append(web.arena.RedRealtimeScore.CurrentScore.Fouls, foul)
@@ -134,6 +141,7 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 					append(web.arena.BlueRealtimeScore.CurrentScore.Fouls, foul)
 			}
 			web.arena.RealtimeScoreNotifier.Notify()
+			continue
 		case "deleteFoul":
 			args := struct {
 				Alliance       string
@@ -148,7 +156,7 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			}
 
 			// Remove the foul from the correct alliance's list.
-			deleteFoul := game.Foul{RuleId: args.RuleId, TeamId: args.TeamId, TimeInMatchSec: args.TimeInMatchSec}
+			deleteFoul := game.Foul{RuleId: args.RuleId, TimeInMatchSec: args.TimeInMatchSec}
 			var fouls *[]game.Foul
 			if args.Alliance == "red" {
 				fouls = &web.arena.RedRealtimeScore.CurrentScore.Fouls
@@ -210,6 +218,65 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			web.arena.AllianceStationDisplayMode = "fieldReset"
 			web.arena.AllianceStationDisplayModeNotifier.Notify()
 			web.arena.ScoringStatusNotifier.Notify()
+			continue
+
+		case "Q":
+			web.arena.RedRealtimeScore.CurrentScore.AutoPoints -= game.RefereeAutoPointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "A":
+			web.arena.RedRealtimeScore.CurrentScore.TeleopPoints -= game.RefereeTelePointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "W":
+			web.arena.RedRealtimeScore.CurrentScore.AutoPoints += game.RefereeAutoPointsAwarded
+
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "S":
+			web.arena.RedRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "T":
+			web.arena.BlueRealtimeScore.CurrentScore.AutoPoints -= game.RefereeAutoPointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "G":
+			web.arena.BlueRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "Y":
+			web.arena.BlueRealtimeScore.CurrentScore.AutoPoints += game.RefereeAutoPointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+		case "H":
+			web.arena.BlueRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+
+		case "N":
+			web.arena.BlueRealtimeScore.CurrentScore.EndgamePoints += game.RefereeEndPointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+
+		case "B":
+			web.arena.BlueRealtimeScore.CurrentScore.EndgamePoints -= game.RefereeEndPointsAwarded
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+
+		case "X":
+			web.arena.RedRealtimeScore.CurrentScore.EndgamePoints += game.RefereeEndPointsAwarded
+
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+
+		case "Z":
+			web.arena.RedRealtimeScore.CurrentScore.EndgamePoints -= game.RefereeEndPointsAwarded
+
+			web.arena.RealtimeScoreNotifier.Notify()
+			continue
+
 		default:
 			ws.WriteError(fmt.Sprintf("Invalid message type '%s'.", messageType))
 			continue

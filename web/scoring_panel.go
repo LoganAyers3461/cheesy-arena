@@ -6,16 +6,17 @@
 package web
 
 import (
-	"fmt"
-	"github.com/Team254/cheesy-arena/field"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
+
+	"github.com/Team254/cheesy-arena/field"
+	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/gorilla/mux"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Renders the scoring interface which enables input of scores in real-time.
@@ -26,22 +27,64 @@ func (web *Web) scoringPanelHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	alliance := vars["alliance"]
-	if alliance != "red" && alliance != "blue" {
-		handleWebErr(w, fmt.Errorf("Invalid alliance '%s'.", alliance))
-		return
+	if alliance != "red" {
+		// handleWebErr(w, fmt.Errorf("Invalid alliance '%s'.", alliance))
+		alliance = "red"
+
 	}
 
-	template, err := web.parseFiles("templates/scoring_panel.html", "templates/base.html")
+	template, err := web.parseFiles("templates/scoring_panel.html")
 	if err != nil {
 		handleWebErr(w, err)
 		return
 	}
+
+	match := web.arena.CurrentMatch
+	matchType := match.CapitalizedType()
+	red1 := web.arena.AllianceStations["R1"].Team
+	if red1 == nil {
+		red1 = &model.Team{}
+	}
+	red2 := web.arena.AllianceStations["R2"].Team
+	if red2 == nil {
+		red2 = &model.Team{}
+	}
+	red3 := web.arena.AllianceStations["R3"].Team
+	if red3 == nil {
+		red3 = &model.Team{}
+	}
+	blue1 := web.arena.AllianceStations["B1"].Team
+	if blue1 == nil {
+		blue1 = &model.Team{}
+	}
+	blue2 := web.arena.AllianceStations["B2"].Team
+	if blue2 == nil {
+		blue2 = &model.Team{}
+	}
+	blue3 := web.arena.AllianceStations["B3"].Team
+	if blue3 == nil {
+		blue3 = &model.Team{}
+	}
 	data := struct {
 		*model.EventSettings
-		PlcIsEnabled bool
-		Alliance     string
-	}{web.arena.EventSettings, web.arena.Plc.IsEnabled(), alliance}
-	err = template.ExecuteTemplate(w, "base_no_navbar", data)
+		MatchType        string
+		MatchDisplayName string
+		Red1             *model.Team
+		Red2             *model.Team
+		Red3             *model.Team
+		Blue1            *model.Team
+		Blue2            *model.Team
+		Blue3            *model.Team
+		RedFouls         []game.Foul
+		BlueFouls        []game.Foul
+		RedCards         map[string]string
+		BlueCards        map[string]string
+		Rules            map[int]*game.Rule
+		Alliance         string
+	}{web.arena.EventSettings, matchType, match.DisplayName, red1, red2, red3, blue1, blue2, blue3,
+		web.arena.RedRealtimeScore.CurrentScore.Fouls, web.arena.BlueRealtimeScore.CurrentScore.Fouls,
+		web.arena.RedRealtimeScore.Cards, web.arena.BlueRealtimeScore.Cards, game.GetAllRules(), alliance}
+	err = template.ExecuteTemplate(w, "scoring_panel.html", data)
 	if err != nil {
 		handleWebErr(w, err)
 		return
@@ -56,16 +99,10 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 
 	vars := mux.Vars(r)
 	alliance := vars["alliance"]
-	if alliance != "red" && alliance != "blue" {
-		handleWebErr(w, fmt.Errorf("Invalid alliance '%s'.", alliance))
-		return
-	}
-
-	var realtimeScore **field.RealtimeScore
-	if alliance == "red" {
-		realtimeScore = &web.arena.RedRealtimeScore
-	} else {
-		realtimeScore = &web.arena.BlueRealtimeScore
+	if alliance != "red" {
+		// handleWebErr(w, fmt.Errorf("Invalid alliance '%s'.", alliance))
+		// return
+		alliance = "red"
 	}
 
 	ws, err := websocket.NewWebsocket(w, r)
@@ -80,12 +117,11 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 	defer web.arena.ScoringPanelRegistry.UnregisterPanel(alliance, ws)
 
 	// Subscribe the websocket to the notifiers whose messages will be passed on to the client, in a separate goroutine.
-	go ws.HandleNotifiers(web.arena.MatchLoadNotifier, web.arena.MatchTimeNotifier, web.arena.RealtimeScoreNotifier,
-		web.arena.ReloadDisplaysNotifier)
+	go ws.HandleNotifiers(web.arena.MatchLoadNotifier, web.arena.ReloadDisplaysNotifier, web.arena.MatchTimingNotifier, web.arena.ArenaStatusNotifier, web.arena.MatchTimeNotifier, web.arena.RealtimeScoreNotifier)
 
 	// Loop, waiting for commands and responding to them, until the client closes the connection.
 	for {
-		command, _, err := ws.Read()
+		command, data, err := ws.Read()
 		if err != nil {
 			if err == io.EOF {
 				// Client has closed the connection; nothing to do here.
@@ -95,8 +131,32 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		score := &(*realtimeScore).CurrentScore
-		scoreChanged := false
+		// score := &(*realtimeScore).CurrentScore
+		// scoreChanged := false
+
+		if command == "addFoul" {
+			args := struct {
+				Alliance string
+				TeamId   int
+				RuleId   int
+			}{}
+			err = mapstructure.Decode(data, &args)
+			if err != nil {
+				ws.WriteError(err.Error())
+				continue
+			}
+
+			// Add the foul to the correct alliance's list.
+			foul := game.Foul{RuleId: args.RuleId, TimeInMatchSec: web.arena.MatchTimeSec()}
+			if args.Alliance == "red" {
+				web.arena.RedRealtimeScore.CurrentScore.Fouls =
+					append(web.arena.RedRealtimeScore.CurrentScore.Fouls, foul)
+			} else {
+				web.arena.BlueRealtimeScore.CurrentScore.Fouls =
+					append(web.arena.BlueRealtimeScore.CurrentScore.Fouls, foul)
+			}
+			web.arena.RealtimeScoreNotifier.Notify()
+		}
 
 		if command == "commitMatch" {
 			if web.arena.MatchState != field.PostMatch {
@@ -106,61 +166,71 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			}
 			web.arena.ScoringPanelRegistry.SetScoreCommitted(alliance, ws)
 			web.arena.ScoringStatusNotifier.Notify()
-		} else if number, err := strconv.Atoi(command); err == nil && number >= 1 && number <= 6 {
-			// Handle per-robot scoring fields.
-			if number <= 3 {
-				index := number - 1
-				score.TaxiStatuses[index] = !score.TaxiStatuses[index]
-				scoreChanged = true
-			} else {
-				index := number - 4
-				score.EndgameStatuses[index]++
-				if score.EndgameStatuses[index] == 5 {
-					score.EndgameStatuses[index] = 0
-				}
-				scoreChanged = true
-			}
 		} else if !web.arena.Plc.IsEnabled() {
 			switch strings.ToUpper(command) {
 			case "Q":
-				scoreChanged = decrementGoal(score.AutoCargoUpper[:])
+				web.arena.RedRealtimeScore.CurrentScore.AutoPoints -= game.RefereeAutoPointsAwarded
+
+				web.arena.RealtimeScoreNotifier.Notify()
 			case "A":
-				scoreChanged = decrementGoal(score.AutoCargoLower[:])
+				web.arena.RedRealtimeScore.CurrentScore.TeleopPoints -= game.RefereeTelePointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
 			case "W":
-				scoreChanged = incrementGoal(score.AutoCargoUpper[:])
+				web.arena.RedRealtimeScore.CurrentScore.AutoPoints += game.RefereeAutoPointsAwarded
+
+				web.arena.RealtimeScoreNotifier.Notify()
 			case "S":
-				scoreChanged = incrementGoal(score.AutoCargoLower[:])
-			case "E":
-				scoreChanged = decrementGoal(score.TeleopCargoUpper[:])
-			case "D":
-				scoreChanged = decrementGoal(score.TeleopCargoLower[:])
-			case "R":
-				scoreChanged = incrementGoal(score.TeleopCargoUpper[:])
-			case "F":
-				scoreChanged = incrementGoal(score.TeleopCargoLower[:])
+				web.arena.RedRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+
+				web.arena.RealtimeScoreNotifier.Notify()
+			case "T":
+				web.arena.BlueRealtimeScore.CurrentScore.AutoPoints -= game.RefereeAutoPointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+			case "G":
+				web.arena.BlueRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+			case "Y":
+				web.arena.BlueRealtimeScore.CurrentScore.AutoPoints += game.RefereeAutoPointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+			case "H":
+				web.arena.BlueRealtimeScore.CurrentScore.TeleopPoints += game.RefereeTelePointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "N":
+				web.arena.BlueRealtimeScore.CurrentScore.EndgamePoints += game.RefereeEndPointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "B":
+				web.arena.BlueRealtimeScore.CurrentScore.EndgamePoints -= game.RefereeEndPointsAwarded
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "X":
+				web.arena.RedRealtimeScore.CurrentScore.EndgamePoints += game.RefereeEndPointsAwarded
+
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "Z":
+				web.arena.RedRealtimeScore.CurrentScore.EndgamePoints -= game.RefereeEndPointsAwarded
+
+				web.arena.RealtimeScoreNotifier.Notify()
+
 			}
 
 		}
 
-		if scoreChanged {
-			web.arena.RealtimeScoreNotifier.Notify()
-		}
 	}
 }
 
 // Increments the cargo count for the given goal.
-func incrementGoal(goal []int) bool {
+func incrementGoal(goal int) {
 	// Use just the first hub quadrant for manual scoring.
-	goal[0]++
-	return true
+	goal++
 }
 
-// Decrements the cargo for the given goal.
-func decrementGoal(goal []int) bool {
+func decrementGoal(goal int) {
 	// Use just the first hub quadrant for manual scoring.
-	if goal[0] > 0 {
-		goal[0]--
-		return true
+	if goal > 0 {
+		goal--
 	}
-	return false
+
 }

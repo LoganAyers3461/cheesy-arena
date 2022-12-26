@@ -1,19 +1,29 @@
 {{define "title"}}Announcer Display{{end}}
 {{define "body"}}
-<h3 id="matchName"></h3>
+
+
+<style>
+ .row .header h4 {
+    color:white;
+  }
+</style>
+
+<br>
 <div class="row">
-  <div class="col-lg-2"><h4>Team</h4></div>
-  <div class="col-lg-5"><h4>Name</h4></div>
-  <div class="col-lg-5"><h4>Recent Accomplishments</h4></div>
-</div>
-<div id="teams" class="row"></div>
-<br />
-<div class="row">
-  <div id="matchState" class="col-lg-2 col-lg-offset-2 well well-sm text-center">&nbsp;</div>
+  <div class="col-lg-3 well well-sm text-center" id="matchName">&nbsp;</div>
+  <div id="matchState" class="col-lg-2 well well-sm text-center">&nbsp;</div>
   <div id="matchTime" class="col-lg-2 well well-sm text-center">&nbsp;</div>
   <div id="redScore" class="col-lg-2 well well-sm well-red text-center">&nbsp;</div>
   <div id="blueScore" class="col-lg-2 well well-sm well-blue text-center">&nbsp;</div>
 </div>
+
+<div class="row">
+  <div class="col-lg-2 header"><h4>Team</h4></div>
+  <div class="col-lg-5 header"><h4>Name</h4></div>
+  <div class="col-lg-5 header"><h4>Recent Accomplishments</h4></div>
+</div>
+<div id="teams" class="row"></div>
+<br />
 <div id="matchResult" class="modal" style="top: 10%;">
   <div class="modal-dialog modal-large">
     <div class="modal-content">
@@ -55,52 +65,21 @@
 <script id="matchResultTemplate" type="text/x-handlebars-template">
   <h4>Score</h4>
   <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Taxi Points</div>
-    <div class="col-lg-2">{{"{{score.TaxiPoints}}"}}</div>
+    <div class="col-lg-7 col-lg-offset-1 control-label">Auto Points</div>
+    <div class="col-lg-2">{{"{{score.AutoPoints}}"}}</div>
   </div>
   <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Cargo Points</div>
-    <div class="col-lg-2">{{"{{score.CargoPoints}}"}}</div>
+    <div class="col-lg-7 col-lg-offset-1 control-label">Teleop Points</div>
+    <div class="col-lg-2">{{"{{score.TeleopPoints}}"}}</div>
   </div>
   <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Hangar Points</div>
-    <div class="col-lg-2">{{"{{score.HangarPoints}}"}}</div>
-  </div>
-  <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Foul Points</div>
-    <div class="col-lg-2">{{"{{score.FoulPoints}}"}}</div>
-  </div>
-  <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Cargo RP</div>
-    <div class="col-lg-2">{{"{{score.CargoBonusRankingPoint}}"}}</div>
-  </div>
-  <div class="row">
-    <div class="col-lg-7 col-lg-offset-1 control-label">Hangar RP</div>
-    <div class="col-lg-2">{{"{{score.HangarBonusRankingPoint}}"}}</div>
+    <div class="col-lg-7 col-lg-offset-1 control-label">Endgame Points</div>
+    <div class="col-lg-2">{{"{{score.EndgamePoints}}"}}</div>
   </div>
   <div class="row">
     <div class="col-lg-7 col-lg-offset-1 control-label"><b>Final Score</b></div>
     <div class="col-lg-2"><b>{{"{{score.Score}}"}}</b></div>
   </div>
-  <h4>Fouls</h4>
-  {{"{{#each fouls}}"}}
-    <div class="row">
-      <div class="col-lg-3 col-lg-offset-1">
-        {{"{{#if IsRankingPoint}}"}}Free RP{{"{{else}}"}}{{"{{#if IsTechnical}}"}}Tech {{"{{/if}}"}}Foul{{"{{/if}}"}}
-      </div>
-      <div class="col-lg-3">Team {{"{{TeamId}}"}}</div>
-      <div class="col-lg-3" data-toggle="tooltip" title="{{"{{Description}}"}}">{{"{{RuleNumber}}"}}</div>
-    </div>
-  {{"{{/each}}"}}
-  <h4>Cards</h4>
-  {{"{{#eachMapEntry cards}}"}}
-    {{"{{#if this.value}}"}}
-      <div class="row">
-        <div class="col-lg-3 col-lg-offset-1">Team {{"{{this.key}}"}}</div>
-        <div class="col-lg-3 col-lg-offset-1" style="text-transform: capitalize;">{{"{{this.value}}"}}</div>
-      </div>
-    {{"{{/if}}"}}
-  {{"{{/eachMapEntry}}"}}
   <h4>Rankings</h4>
   {{"{{#eachMapEntry rankings}}"}}
   {{"{{#if this.value}}"}}

@@ -230,10 +230,9 @@ var handleMatchTime = function(data) {
   });
 };
 
-// Handles a websocket message to update the match score.
 var handleRealtimeScore = function(data) {
-  $("#redScore").text(data.Red.ScoreSummary.Score);
-  $("#blueScore").text(data.Blue.ScoreSummary.Score);
+  $("#redScore").text(data.Red.ScoreSummary.Score - data.Red.ScoreSummary.EndgamePoints);
+  $("#blueScore").text(data.Blue.ScoreSummary.Score - data.Blue.ScoreSummary.EndgamePoints);
 };
 
 // Handles a websocket message to update the audience display screen selector.
@@ -244,9 +243,9 @@ var handleAudienceDisplayMode = function(data) {
 
 // Handles a websocket message to signal whether the referee and scorers have committed after the match.
 var handleScoringStatus = function(data) {
-  scoreIsReady = data.RefereeScoreReady && data.RedScoreReady && data.BlueScoreReady;
+  scoreIsReady = data.RefereeScoreReady && data.RedScoreReady;
   $("#refereeScoreStatus").attr("data-ready", data.RefereeScoreReady);
-  $("#redScoreStatus").text("Red Scoring " + data.NumRedScoringPanelsReady + "/" + data.NumRedScoringPanels);
+  $("#redScoreStatus").text("Referee Stands " + data.NumRedScoringPanelsReady + "/" + data.NumRedScoringPanels);
   $("#redScoreStatus").attr("data-ready", data.RedScoreReady);
   $("#blueScoreStatus").text("Blue Scoring " + data.NumBlueScoringPanelsReady + "/" + data.NumBlueScoringPanels);
   $("#blueScoreStatus").attr("data-ready", data.BlueScoreReady);

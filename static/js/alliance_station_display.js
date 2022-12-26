@@ -54,23 +54,6 @@ var handleMatchLoad = function(data) {
       $("#teamNameText").attr("data-alliance-bg", station[0]).text("");
       $("#teamRank").attr("data-alliance-bg", station[0]).text("");
     }
-
-    // Populate extra alliance info if this is an elimination match.
-    let elimAlliance = data.Match.ElimRedAlliance;
-    let offFieldTeams = data.RedOffFieldTeams;
-    if (station[0] === "B") {
-      elimAlliance = data.Match.ElimBlueAlliance;
-      offFieldTeams = data.BlueOffFieldTeams;
-    }
-    if (elimAlliance > 0) {
-      let elimAllianceInfo = `Alliance ${elimAlliance}`;
-      if (offFieldTeams.length) {
-        elimAllianceInfo += `&emsp; Not on field: ${offFieldTeams.map(team => team.Id).join(", ")}`;
-      }
-      $("#elimAllianceInfo").html(elimAllianceInfo);
-    } else {
-      $("#elimAllianceInfo").text("");
-    }
   }
 };
 
@@ -83,7 +66,7 @@ var handleArenaStatus = function(data) {
   } else if (stationStatus) {
     if (!stationStatus.DsConn || !stationStatus.DsConn.DsLinked) {
       $("#match").attr("data-status", station[0]);
-    } else if (!stationStatus.DsConn.RobotLinked) {
+    } else if (!stationStatus.DsConn.RobotLinked || !stationStatus.DsConn === null) {
       blink = true;
       if (!blinkInterval) {
         blinkInterval = setInterval(function() {
@@ -101,13 +84,13 @@ var handleArenaStatus = function(data) {
     blinkInterval = null;
   }
 };
-
 // Handles a websocket message to update the match time countdown.
 var handleMatchTime = function(data) {
+  
   translateMatchTime(data, function(matchState, matchStateText, countdownSec) {
-    if (station[0] === "N") {
+    if (station[0] === "N" && matchState != "TIMEOUT_ACTIVE" && matchState != "PRE_MATCH" && matchState != "POST_TIMEOUT") {
       // Pin the state for a non-alliance display to an in-match state, so as to always show time or score.
-      matchState = "TELEOP_PERIOD";
+      matchState = "SHOW_SCORES";
     }
     var countdownString = String(countdownSec % 60);
     if (countdownString.length === 1) {
@@ -121,8 +104,8 @@ var handleMatchTime = function(data) {
 
 // Handles a websocket message to update the match score.
 var handleRealtimeScore = function(data) {
-  $("#redScore").text(data.Red.ScoreSummary.Score - data.Red.ScoreSummary.HangarPoints);
-  $("#blueScore").text(data.Blue.ScoreSummary.Score - data.Blue.ScoreSummary.HangarPoints);
+  $("#redScore").text(data.Red.ScoreSummary.Score - data.Red.ScoreSummary.EndgamePoints);
+  $("#blueScore").text(data.Blue.ScoreSummary.Score - data.Blue.ScoreSummary.EndgamePoints);
 };
 
 $(function() {

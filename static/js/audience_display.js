@@ -17,6 +17,7 @@ var overlayCenteringShowParams;
 var allianceSelectionTemplate = Handlebars.compile($("#allianceSelectionTemplate").html());
 var sponsorImageTemplate = Handlebars.compile($("#sponsorImageTemplate").html());
 var sponsorTextTemplate = Handlebars.compile($("#sponsorTextTemplate").html());
+var winner;
 
 // Constants for overlay positioning. The CSS is the source of truth for the values that represent initial state.
 const overlayCenteringTopUp = "-130px";
@@ -29,7 +30,7 @@ const eventMatchInfoUp = $("#eventMatchInfo").css("height");
 const logoUp = "10px";
 const logoDown = $("#logo").css("top");
 const scoreIn = $(".score").css("width");
-const scoreMid = "135px";
+const scoreMid = "255px";
 const scoreOut = "255px";
 const scoreFieldsOut = "40px";
 const scoreLogoTop = "-350px";
@@ -139,8 +140,8 @@ var handleMatchTime = function(data) {
 
 // Handles a websocket message to update the match score.
 var handleRealtimeScore = function(data) {
-  $("#" + redSide + "ScoreNumber").text(data.Red.ScoreSummary.Score - data.Red.ScoreSummary.HangarPoints);
-  $("#" + blueSide + "ScoreNumber").text(data.Blue.ScoreSummary.Score - data.Blue.ScoreSummary.HangarPoints);
+  $("#" + redSide + "ScoreNumber").text(data.Red.ScoreSummary.Score - data.Red.ScoreSummary.EndgamePoints);
+  $("#" + blueSide + "ScoreNumber").text(data.Blue.ScoreSummary.Score - data.Blue.ScoreSummary.EndgamePoints);
 
   $("#" + redSide + "CargoNumerator").text(data.Red.ScoreSummary.CargoCount);
   $("#" + redSide + "CargoDenominator").text(data.Red.ScoreSummary.CargoGoal);
@@ -166,9 +167,9 @@ var handleScorePosted = function(data) {
   $("#" + redSide + "FinalTeam1Avatar").attr("src", getAvatarUrl(data.Match.Red1));
   $("#" + redSide + "FinalTeam2Avatar").attr("src", getAvatarUrl(data.Match.Red2));
   $("#" + redSide + "FinalTeam3Avatar").attr("src", getAvatarUrl(data.Match.Red3));
-  $("#" + redSide + "FinalTaxiPoints").text(data.RedScoreSummary.TaxiPoints);
-  $("#" + redSide + "FinalCargoPoints").text(data.RedScoreSummary.CargoPoints);
-  $("#" + redSide + "FinalHangarPoints").text(data.RedScoreSummary.HangarPoints);
+  $("#" + redSide + "FinalTaxiPoints").text(data.RedScoreSummary.AutoPoints);
+  $("#" + redSide + "FinalCargoPoints").text(data.RedScoreSummary.TeleopPoints);
+  $("#" + redSide + "FinalHangarPoints").text(data.RedScoreSummary.EndgamePoints);
   $("#" + redSide + "FinalFoulPoints").text(data.RedScoreSummary.FoulPoints);
   $("#" + redSide + "FinalCargoBonusRankingPoint").html(data.RedScoreSummary.CargoBonusRankingPoint ? "&#x2714;" : "&#x2718;");
   $("#" + redSide + "FinalCargoBonusRankingPoint").attr("data-checked", data.RedScoreSummary.CargoBonusRankingPoint);
@@ -183,9 +184,9 @@ var handleScorePosted = function(data) {
   $("#" + blueSide + "FinalTeam1Avatar").attr("src", getAvatarUrl(data.Match.Blue1));
   $("#" + blueSide + "FinalTeam2Avatar").attr("src", getAvatarUrl(data.Match.Blue2));
   $("#" + blueSide + "FinalTeam3Avatar").attr("src", getAvatarUrl(data.Match.Blue3));
-  $("#" + blueSide + "FinalTaxiPoints").text(data.BlueScoreSummary.TaxiPoints);
-  $("#" + blueSide + "FinalCargoPoints").text(data.BlueScoreSummary.CargoPoints);
-  $("#" + blueSide + "FinalHangarPoints").text(data.BlueScoreSummary.HangarPoints);
+  $("#" + blueSide + "FinalTaxiPoints").text(data.BlueScoreSummary.AutoPoints);
+  $("#" + blueSide + "FinalCargoPoints").text(data.BlueScoreSummary.TeleopPoints);
+  $("#" + blueSide + "FinalHangarPoints").text(data.BlueScoreSummary.EndgamePoints);
   $("#" + blueSide + "FinalFoulPoints").text(data.BlueScoreSummary.FoulPoints);
   $("#" + blueSide + "FinalCargoBonusRankingPoint").html(data.BlueScoreSummary.CargoBonusRankingPoint ? "&#x2714;" : "&#x2718;");
   $("#" + blueSide + "FinalCargoBonusRankingPoint").attr("data-checked", data.BlueScoreSummary.CargoBonusRankingPoint);
@@ -206,6 +207,12 @@ var handleScorePosted = function(data) {
   } else {
     $(".playoffHiddenFields").show();
   }
+
+  console.log(data.DetermineMatchStatus)
+  if (data.RedScoreSummary.Score > data.BlueScoreSummary.Score) { winner = "redWin"; console.log(winner);}
+  if (data.BlueScoreSummary.Score > data.RedScoreSummary.Score) { winner = "blueWin"; console.log(winner);}
+  if (data.BlueScoreSummary.Score === data.RedScoreSummary.Score) { winner = "noWin"; console.log(winner);}
+
 };
 
 // Handles a websocket message to play a sound to signal match start/stop/etc.
@@ -308,7 +315,8 @@ var transitionBlankToMatch = function(callback) {
     $(".teams").css("display", "flex");
     $(".score-fields").css("display", "flex");
     $(".score-fields").transition({queue: false, width: scoreFieldsOut}, 500, "ease");
-    $("#logo").transition({queue: false, top: logoUp}, 500, "ease");
+    $("#matchTime").transition({queue: false, top: -35}, 500, "ease");
+    $("#logo").transition({queue: false, opacity: 0}, 750, "ease");
     $(".score").transition({queue: false, width: scoreOut}, 500, "ease", function() {
       $("#eventMatchInfo").css("display", "flex");
       $("#eventMatchInfo").transition({queue: false, height: eventMatchInfoDown}, 500, "ease", callback);
@@ -319,10 +327,71 @@ var transitionBlankToMatch = function(callback) {
   });
 };
 
+
+
+var playWinAnimation = function(data) {
+  const redWin = document.getElementById('redWin');
+  const blueWin = document.getElementById('blueWin');
+  const noWin = document.getElementById('noWin');
+  
+    curVid = document.getElementById("" + winner);
+    curVid.style.display = "block";
+    curVid.currentTime = '0';
+    curVid.play();
+
+    
+  console.log(curVid);
+    
+
+}
+
+var clearWinAnimation = function() {
+  const redWin = document.getElementById('redWin');
+  const blueWin = document.getElementById('blueWin');
+  const noWin = document.getElementById('noWin');
+  redWin.style.display = "none";
+  redWin.currentTime = '0';
+  blueWin.style.display = "none";
+  blueWin.currentTime = '0';
+  noWin.style.display = "none";
+  noWin.currentTime = '0';
+}
+
 var transitionBlankToScore = function(callback) {
-  transitionBlankToLogo(function() {
-    setTimeout(function() { transitionLogoToScore(callback); }, 50);
-  });
+  
+  function waitForMe(){
+    // Returns promise
+    console.log('Inside waitForMe');
+    return new Promise(function(resolve, reject){
+        if(true){ // Try changing to 'false'
+            setTimeout(function(){
+                console.log('waitForMe\'s function succeeded');
+                resolve();
+            }, 17100);
+        }
+        else{
+            setTimeout(function(){
+                console.log('waitForMe\'s else block failed');
+                resolve();
+            }, 18000);
+        }
+    });
+ }
+  console.log(winner)
+  playWinAnimation()
+  waitForMe().then(function(intentsArr){
+    transitionBlankToLogo(function() {
+      setTimeout(function() { transitionLogoToScore(callback); }, 50);
+      clearWinAnimation();
+    });
+  },
+  function(err){
+    console.log('This is error message.');
+
+  })
+
+
+
 };
 
 var transitionBlankToSponsor = function(callback) {
@@ -398,7 +467,8 @@ var transitionIntroToMatch = function(callback) {
   });
   $(".score-fields").css("display", "flex");
   $(".score-fields").transition({queue: false, width: scoreFieldsOut}, 500, "ease");
-  $("#logo").transition({queue: false, top: logoUp}, 500, "ease");
+  $("#logo").transition({queue: false, opacity: 0}, 500, "ease");
+  $("#matchTime").transition({queue: false, top: -35}, 750, "ease");
   $(".score").transition({queue: false, width: scoreOut}, 500, "ease", function() {
     $(".score-number").transition({queue: false, opacity: 1}, 750, "ease");
     $("#matchTime").transition({queue: false, opacity: 1}, 750, "ease", callback);
@@ -413,7 +483,8 @@ var transitionIntroToTimeout = function(callback) {
       $(".avatars").css("opacity", 0);
       $(".avatars").hide();
       $(".teams").hide();
-      $("#logo").transition({queue: false, top: logoUp}, 500, "ease", function() {
+      $("#matchTime").transition({queue: false, top: -35}, 750, "ease");
+      $("#logo").transition({queue: false, opacity: 0}, 500, "ease", function() {
         $("#matchTime").transition({queue: false, opacity: 1}, 750, "ease", callback);
       });
     });
@@ -496,7 +567,7 @@ var transitionMatchToBlank = function(callback) {
   $(".score-number").transition({queue: false, opacity: 0}, 300, "linear", function() {
     $("#eventMatchInfo").hide();
     $(".score-fields").transition({queue: false, width: 0}, 500, "ease");
-    $("#logo").transition({queue: false, top: logoDown}, 500, "ease");
+    $("#logo").transition({queue: false, opacity: 1}, 500, "ease");
     $(".score").transition({queue: false, width: scoreIn}, 500, "ease", function() {
       $(".teams").hide();
       $(".score-fields").hide();
@@ -513,6 +584,8 @@ var transitionMatchToIntro = function(callback) {
     $("#logo").transition({queue: false, top: logoDown}, 500, "ease");
     $(".score").transition({queue: false, width: scoreMid}, 500, "ease", function() {
       $(".score-fields").hide();
+      $("#matchTime").transition({queue: false, top: 1}, 750, "ease");
+      $("#logo").transition({queue: false, opacity: 1}, 500, "ease");
       $(".avatars").css("display", "flex");
       $(".avatars").transition({queue: false, opacity: 1}, 500, "ease", callback);
     });
@@ -594,7 +667,7 @@ var transitionTimeoutToBlank = function(callback) {
 
 var transitionTimeoutToIntro = function(callback) {
   $("#matchTime").transition({queue: false, opacity: 0}, 300, "linear", function() {
-    $("#logo").transition({queue: false, top: logoDown}, 500, "ease", function() {
+    $("#logo").transition({queue: false, opacity: 1}, 750, "ease", function() {
       $(".avatars").css("display", "flex");
       $(".avatars").css("opacity", 1);
       $(".teams").css("display", "flex");
@@ -702,6 +775,9 @@ $(function() {
     realtimeScore: function(event) { handleRealtimeScore(event.data); },
     scorePosted: function(event) { handleScorePosted(event.data); }
   });
+
+
+
 
   // Map how to transition from one screen to another. Missing links between screens indicate that first we
   // must transition to the blank screen and then to the target screen.

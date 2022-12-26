@@ -30,20 +30,11 @@ var renderResults = function(alliance) {
   var scoreContent = scoreTemplate(result);
   $("#" + alliance + "Score").html(scoreContent);
 
-  // Set the values of the form fields from the JSON results data.
-  for (var i = 0; i < 4; i++) {
-    var i1 = i + 1;
+  getInputElement(alliance, "AutoPoints").val(result.score.AutoPoints);
+  getInputElement(alliance, "TeleopPoints").val(result.score.TeleopPoints);
+  getInputElement(alliance, "EndgamePoints").val(result.score.EndgamePoints);
 
-    if (i < 3) {
-      getInputElement(alliance, "TaxiStatuses" + i1).prop("checked", result.score.TaxiStatuses[i]);
-      getInputElement(alliance, "EndgameStatuses" + i1, result.score.EndgameStatuses[i]).prop("checked", true);
-    }
 
-    getInputElement(alliance, "AutoCargoLower" + i).val(result.score.AutoCargoLower[i]);
-    getInputElement(alliance, "AutoCargoUpper" + i).val(result.score.AutoCargoUpper[i]);
-    getInputElement(alliance, "TeleopCargoLower" + i).val(result.score.TeleopCargoLower[i]);
-    getInputElement(alliance, "TeleopCargoUpper" + i).val(result.score.TeleopCargoUpper[i]);
-  }
 
   if (result.score.Fouls != null) {
     $.each(result.score.Fouls, function(k, v) {
@@ -68,25 +59,9 @@ var updateResults = function(alliance) {
     formData[v.name] = v.value;
   });
 
-  result.score.TaxiStatuses = [];
-  result.score.AutoCargoLower = [];
-  result.score.AutoCargoUpper = [];
-  result.score.TeleopCargoLower = [];
-  result.score.TeleopCargoUpper = [];
-  result.score.EndgameStatuses = [];
-  for (var i = 0; i < 4; i++) {
-    var i1 = i + 1;
-
-    if (i < 3) {
-      result.score.TaxiStatuses[i] = formData[alliance + "TaxiStatuses" + i1] === "on";
-      result.score.EndgameStatuses[i] = parseInt(formData[alliance + "EndgameStatuses" + i1]);
-    }
-
-    result.score.AutoCargoLower[i] = parseInt(formData[alliance + "AutoCargoLower" + i]);
-    result.score.AutoCargoUpper[i] = parseInt(formData[alliance + "AutoCargoUpper" + i]);
-    result.score.TeleopCargoLower[i] = parseInt(formData[alliance + "TeleopCargoLower" + i]);
-    result.score.TeleopCargoUpper[i] = parseInt(formData[alliance + "TeleopCargoUpper" + i]);
-  }
+  result.score.AutoPoints = parseInt(formData[alliance + "AutoPoints"]);
+  result.score.TeleopPoints = parseInt(formData[alliance + "TeleopPoints"]);
+  result.score.EndgamePoints = parseInt(formData[alliance + "EndgamePoints"]);
 
   result.score.Fouls = [];
   for (var i = 0; formData[alliance + "Foul" + i + "Time"]; i++) {

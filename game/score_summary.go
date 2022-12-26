@@ -6,20 +6,11 @@
 package game
 
 type ScoreSummary struct {
-	TaxiPoints              int
-	AutoCargoCount          int
-	AutoCargoPoints         int
-	CargoCount              int
-	CargoPoints             int
-	HangarPoints            int
-	MatchPoints             int
-	FoulPoints              int
-	Score                   int
-	QuintetAchieved         bool
-	CargoGoal               int
-	CargoBonusRankingPoint  bool
-	HangarBonusRankingPoint bool
-	DoubleBonusRankingPoint bool
+	AutoPoints    int
+	TeleopPoints  int
+	EndgamePoints int
+	FoulPoints    int
+	Score         int
 }
 
 type MatchStatus string
@@ -42,15 +33,7 @@ func DetermineMatchStatus(redScoreSummary, blueScoreSummary *ScoreSummary, apply
 		if status := comparePoints(redScoreSummary.FoulPoints, blueScoreSummary.FoulPoints); status != TieMatch {
 			return status
 		}
-		if status := comparePoints(redScoreSummary.HangarPoints, blueScoreSummary.HangarPoints); status != TieMatch {
-			return status
-		}
-		if status := comparePoints(
-			redScoreSummary.TaxiPoints+redScoreSummary.AutoCargoPoints,
-			blueScoreSummary.TaxiPoints+blueScoreSummary.AutoCargoPoints,
-		); status != TieMatch {
-			return status
-		}
+
 	}
 
 	return TieMatch

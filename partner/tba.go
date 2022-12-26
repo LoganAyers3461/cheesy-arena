@@ -11,13 +11,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Team254/cheesy-arena/game"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/Team254/cheesy-arena/model"
 )
 
 const (
@@ -35,14 +34,13 @@ type TbaClient struct {
 }
 
 type TbaMatch struct {
-	CompLevel      string                            `json:"comp_level"`
-	SetNumber      int                               `json:"set_number"`
-	MatchNumber    int                               `json:"match_number"`
-	Alliances      map[string]*TbaAlliance           `json:"alliances"`
-	ScoreBreakdown map[string]map[string]interface{} `json:"score_breakdown"`
-	TimeString     string                            `json:"time_string"`
-	TimeUtc        string                            `json:"time_utc"`
-	DisplayName    string                            `json:"display_name"`
+	CompLevel   string                  `json:"comp_level"`
+	SetNumber   int                     `json:"set_number"`
+	MatchNumber int                     `json:"match_number"`
+	Alliances   map[string]*TbaAlliance `json:"alliances"`
+	TimeString  string                  `json:"time_string"`
+	TimeUtc     string                  `json:"time_utc"`
+	DisplayName string                  `json:"display_name"`
 }
 
 type TbaAlliance struct {
@@ -52,60 +50,18 @@ type TbaAlliance struct {
 	Score      *int     `json:"score"`
 }
 
-type TbaScoreBreakdown struct {
-	TaxiRobot1              string `mapstructure:"taxiRobot1"`
-	TaxiRobot2              string `mapstructure:"taxiRobot2"`
-	TaxiRobot3              string `mapstructure:"taxiRobot3"`
-	AutoCargoLowerBlue      int    `mapstructure:"autoCargoLowerBlue"`
-	AutoCargoLowerFar       int    `mapstructure:"autoCargoLowerFar"`
-	AutoCargoLowerNear      int    `mapstructure:"autoCargoLowerNear"`
-	AutoCargoLowerRed       int    `mapstructure:"autoCargoLowerRed"`
-	AutoCargoUpperBlue      int    `mapstructure:"autoCargoUpperBlue"`
-	AutoCargoUpperFar       int    `mapstructure:"autoCargoUpperFar"`
-	AutoCargoUpperNear      int    `mapstructure:"autoCargoUpperNear"`
-	AutoCargoUpperRed       int    `mapstructure:"autoCargoUpperRed"`
-	AutoCargoTotal          int    `mapstructure:"autoCargoTotal"`
-	TeleopCargoLowerBlue    int    `mapstructure:"teleopCargoLowerBlue"`
-	TeleopCargoLowerFar     int    `mapstructure:"teleopCargoLowerFar"`
-	TeleopCargoLowerNear    int    `mapstructure:"teleopCargoLowerNear"`
-	TeleopCargoLowerRed     int    `mapstructure:"teleopCargoLowerRed"`
-	TeleopCargoUpperBlue    int    `mapstructure:"teleopCargoUpperBlue"`
-	TeleopCargoUpperFar     int    `mapstructure:"teleopCargoUpperFar"`
-	TeleopCargoUpperNear    int    `mapstructure:"teleopCargoUpperNear"`
-	TeleopCargoUpperRed     int    `mapstructure:"teleopCargoUpperRed"`
-	TeleopCargoTotal        int    `mapstructure:"teleopCargoTotal"`
-	MatchCargoTotal         int    `mapstructure:"matchCargoTotal"`
-	EndgameRobot1           string `mapstructure:"endgameRobot1"`
-	EndgameRobot2           string `mapstructure:"endgameRobot2"`
-	EndgameRobot3           string `mapstructure:"endgameRobot3"`
-	AutoTaxiPoints          int    `mapstructure:"autoTaxiPoints"`
-	AutoCargoPoints         int    `mapstructure:"autoCargoPoints"`
-	AutoPoints              int    `mapstructure:"autoPoints"`
-	TeleopCargoPoints       int    `mapstructure:"teleopCargoPoints"`
-	EndgamePoints           int    `mapstructure:"endgamePoints"`
-	TeleopPoints            int    `mapstructure:"teleopPoints"`
-	QuintetAchieved         bool   `mapstructure:"quintetAchieved"`
-	CargoBonusRankingPoint  bool   `mapstructure:"cargoBonusRankingPoint"`
-	HangarBonusRankingPoint bool   `mapstructure:"hangarBonusRankingPoint"`
-	FoulCount               int    `mapstructure:"foulCount"`
-	TechFoulCount           int    `mapstructure:"techFoulCount"`
-	FoulPoints              int    `mapstructure:"foulPoints"`
-	TotalPoints             int    `mapstructure:"totalPoints"`
-	RP                      int    `mapstructure:"rp"`
-}
-
 type TbaRanking struct {
-	TeamKey          string `json:"team_key"`
-	Rank             int    `json:"rank"`
-	RP               float32
-	Match            float32
-	Hangar           float32
-	TaxiAndAutoCargo float32
-	Wins             int `json:"wins"`
-	Losses           int `json:"losses"`
-	Ties             int `json:"ties"`
-	Dqs              int `json:"dqs"`
-	Played           int `json:"played"`
+	TeamKey string `json:"team_key"`
+	Rank    int    `json:"rank"`
+	RP      float32
+	Auto    int
+	Endgame int
+	Teleop  int
+	Wins    int `json:"wins"`
+	Losses  int `json:"losses"`
+	Ties    int `json:"ties"`
+	Dqs     int `json:"dqs"`
+	Played  int `json:"played"`
 }
 
 type TbaRankings struct {
@@ -160,8 +116,6 @@ type tbaElimMatchKey struct {
 	setNumber int
 }
 
-var taxiMapping = map[bool]string{false: "No", true: "Yes"}
-var endgameMapping = []string{"None", "Low", "Mid", "High", "Traversal"}
 var doubleEliminationMatchKeyMapping = map[elimMatchKey]tbaElimMatchKey{
 	{1, 1}: {"ef", 1},
 	{1, 2}: {"ef", 2},
@@ -356,40 +310,37 @@ func (client *TbaClient) PublishMatches(database *model.Database) error {
 		matchNumber, _ := strconv.Atoi(match.DisplayName)
 
 		// Fill in scores if the match has been played.
-		var scoreBreakdown map[string]map[string]interface{}
+		var redScoreSummary, blueScoreSummary int
 		var redScore, blueScore *int
-		var redCards, blueCards map[string]string
 		if match.IsComplete() {
 			matchResult, err := database.GetMatchResultForMatch(match.Id)
 			if err != nil {
 				return err
 			}
 			if matchResult != nil {
-				scoreBreakdown = make(map[string]map[string]interface{})
-				scoreBreakdown["red"] = createTbaScoringBreakdown(eventSettings, &match, matchResult, "red")
-				scoreBreakdown["blue"] = createTbaScoringBreakdown(eventSettings, &match, matchResult, "blue")
-				redScoreValue := scoreBreakdown["red"]["totalPoints"].(int)
-				blueScoreValue, _ := scoreBreakdown["blue"]["totalPoints"].(int)
-				redScore = &redScoreValue
-				blueScore = &blueScoreValue
-				redCards = matchResult.RedCards
-				blueCards = matchResult.BlueCards
+				redScoreSummary = matchResult.RedScore.AutoPoints +
+					matchResult.RedScore.TeleopPoints +
+					matchResult.RedScore.EndgamePoints
+				blueScoreSummary = matchResult.BlueScore.AutoPoints +
+					matchResult.BlueScore.TeleopPoints +
+					matchResult.BlueScore.EndgamePoints
+				redScore = &redScoreSummary
+				blueScore = &blueScoreSummary
 			}
 		}
 		alliances := make(map[string]*TbaAlliance)
 		alliances["red"] = createTbaAlliance([3]int{match.Red1, match.Red2, match.Red3}, [3]bool{match.Red1IsSurrogate,
-			match.Red2IsSurrogate, match.Red3IsSurrogate}, redScore, redCards)
+			match.Red2IsSurrogate, match.Red3IsSurrogate}, redScore)
 		alliances["blue"] = createTbaAlliance([3]int{match.Blue1, match.Blue2, match.Blue3},
-			[3]bool{match.Blue1IsSurrogate, match.Blue2IsSurrogate, match.Blue3IsSurrogate}, blueScore, blueCards)
+			[3]bool{match.Blue1IsSurrogate, match.Blue2IsSurrogate, match.Blue3IsSurrogate}, blueScore)
 
 		tbaMatches[i] = TbaMatch{
-			CompLevel:      "qm",
-			SetNumber:      0,
-			MatchNumber:    matchNumber,
-			Alliances:      alliances,
-			ScoreBreakdown: scoreBreakdown,
-			TimeString:     match.Time.Local().Format("3:04 PM"),
-			TimeUtc:        match.Time.UTC().Format("2006-01-02T15:04:05"),
+			CompLevel:   "qm",
+			SetNumber:   0,
+			MatchNumber: matchNumber,
+			Alliances:   alliances,
+			TimeString:  match.Time.Local().Format("3:04 PM"),
+			TimeUtc:     match.Time.UTC().Format("2006-01-02T15:04:05"),
 		}
 		if match.Type == "elimination" {
 			setElimMatchKey(&tbaMatches[i], &match, eventSettings.ElimType)
@@ -420,21 +371,20 @@ func (client *TbaClient) PublishRankings(database *model.Database) error {
 	}
 
 	// Build a JSON object of TBA-format rankings.
-	breakdowns := []string{"RP", "Match", "Hangar", "TaxiAndAutoCargo"}
+	breakdowns := []string{"RP", "Auto", "Endgame", "Teleop"}
 	tbaRankings := make([]TbaRanking, len(rankings))
 	for i, ranking := range rankings {
 		tbaRankings[i] = TbaRanking{
-			TeamKey:          getTbaTeam(ranking.TeamId),
-			Rank:             ranking.Rank,
-			RP:               float32(ranking.RankingPoints) / float32(ranking.Played),
-			Match:            float32(ranking.MatchPoints) / float32(ranking.Played),
-			Hangar:           float32(ranking.HangarPoints) / float32(ranking.Played),
-			TaxiAndAutoCargo: float32(ranking.TaxiAndAutoCargoPoints) / float32(ranking.Played),
-			Wins:             ranking.Wins,
-			Losses:           ranking.Losses,
-			Ties:             ranking.Ties,
-			Dqs:              ranking.Disqualifications,
-			Played:           ranking.Played,
+			TeamKey: getTbaTeam(ranking.TeamId),
+			Rank:    ranking.Rank,
+			RP:      float32(ranking.RankingPoints) / float32(ranking.Played),
+			Auto:    ranking.AutoPoints,
+			Endgame: ranking.EndgamePoints,
+			Teleop:  ranking.TeleopPoints,
+			Wins:    ranking.Wins,
+			Losses:  ranking.Losses,
+			Ties:    ranking.Ties,
+			Played:  ranking.Played,
 		}
 	}
 	jsonBody, err := json.Marshal(TbaRankings{breakdowns, tbaRankings})
@@ -556,7 +506,7 @@ func (client *TbaClient) postRequest(resource string, action string, body []byte
 	return httpClient.Do(request)
 }
 
-func createTbaAlliance(teamIds [3]int, surrogates [3]bool, score *int, cards map[string]string) *TbaAlliance {
+func createTbaAlliance(teamIds [3]int, surrogates [3]bool, score *int) *TbaAlliance {
 	alliance := TbaAlliance{Surrogates: []string{}, Dqs: []string{}, Score: score}
 	for i, teamId := range teamIds {
 		teamKey := getTbaTeam(teamId)
@@ -564,98 +514,9 @@ func createTbaAlliance(teamIds [3]int, surrogates [3]bool, score *int, cards map
 		if surrogates[i] {
 			alliance.Surrogates = append(alliance.Surrogates, teamKey)
 		}
-		if cards != nil {
-			if card, ok := cards[strconv.Itoa(teamId)]; ok && card == "red" {
-				alliance.Dqs = append(alliance.Dqs, teamKey)
-			}
-		}
 	}
 
 	return &alliance
-}
-
-func createTbaScoringBreakdown(
-	eventSettings *model.EventSettings,
-	match *model.Match,
-	matchResult *model.MatchResult,
-	alliance string,
-) map[string]interface{} {
-	var breakdown TbaScoreBreakdown
-	var score *game.Score
-	var scoreSummary, opponentScoreSummary *game.ScoreSummary
-	if alliance == "red" {
-		score = matchResult.RedScore
-		scoreSummary = matchResult.RedScoreSummary()
-		opponentScoreSummary = matchResult.BlueScoreSummary()
-	} else {
-		score = matchResult.BlueScore
-		scoreSummary = matchResult.BlueScoreSummary()
-		opponentScoreSummary = matchResult.RedScoreSummary()
-	}
-
-	breakdown.TaxiRobot1 = taxiMapping[score.TaxiStatuses[0]]
-	breakdown.TaxiRobot2 = taxiMapping[score.TaxiStatuses[1]]
-	breakdown.TaxiRobot3 = taxiMapping[score.TaxiStatuses[2]]
-	breakdown.AutoCargoLowerBlue = score.AutoCargoLower[game.BlueQuadrant]
-	breakdown.AutoCargoLowerFar = score.AutoCargoLower[game.FarQuadrant]
-	breakdown.AutoCargoLowerNear = score.AutoCargoLower[game.NearQuadrant]
-	breakdown.AutoCargoLowerRed = score.AutoCargoLower[game.RedQuadrant]
-	breakdown.AutoCargoUpperBlue = score.AutoCargoUpper[game.BlueQuadrant]
-	breakdown.AutoCargoUpperFar = score.AutoCargoUpper[game.FarQuadrant]
-	breakdown.AutoCargoUpperNear = score.AutoCargoUpper[game.NearQuadrant]
-	breakdown.AutoCargoUpperRed = score.AutoCargoUpper[game.RedQuadrant]
-	breakdown.AutoCargoTotal = scoreSummary.AutoCargoCount
-	breakdown.TeleopCargoLowerBlue = score.TeleopCargoLower[game.BlueQuadrant]
-	breakdown.TeleopCargoLowerFar = score.TeleopCargoLower[game.FarQuadrant]
-	breakdown.TeleopCargoLowerNear = score.TeleopCargoLower[game.NearQuadrant]
-	breakdown.TeleopCargoLowerRed = score.TeleopCargoLower[game.RedQuadrant]
-	breakdown.TeleopCargoUpperBlue = score.TeleopCargoUpper[game.BlueQuadrant]
-	breakdown.TeleopCargoUpperFar = score.TeleopCargoUpper[game.FarQuadrant]
-	breakdown.TeleopCargoUpperNear = score.TeleopCargoUpper[game.NearQuadrant]
-	breakdown.TeleopCargoUpperRed = score.TeleopCargoUpper[game.RedQuadrant]
-	breakdown.TeleopCargoTotal = scoreSummary.CargoCount - scoreSummary.AutoCargoCount
-	breakdown.MatchCargoTotal = scoreSummary.CargoCount
-	breakdown.EndgameRobot1 = endgameMapping[score.EndgameStatuses[0]]
-	breakdown.EndgameRobot2 = endgameMapping[score.EndgameStatuses[1]]
-	breakdown.EndgameRobot3 = endgameMapping[score.EndgameStatuses[2]]
-	breakdown.AutoTaxiPoints = scoreSummary.TaxiPoints
-	breakdown.AutoCargoPoints = scoreSummary.AutoCargoPoints
-	breakdown.AutoPoints = scoreSummary.TaxiPoints + scoreSummary.AutoCargoPoints
-	breakdown.TeleopCargoPoints = scoreSummary.CargoPoints - scoreSummary.AutoCargoPoints
-	breakdown.EndgamePoints = scoreSummary.HangarPoints
-	breakdown.TeleopPoints = scoreSummary.CargoPoints - scoreSummary.AutoCargoPoints +
-		scoreSummary.HangarPoints
-	breakdown.QuintetAchieved = scoreSummary.QuintetAchieved
-	breakdown.CargoBonusRankingPoint = scoreSummary.CargoBonusRankingPoint
-	breakdown.HangarBonusRankingPoint = scoreSummary.HangarBonusRankingPoint
-	for _, foul := range score.Fouls {
-		if foul.Rule() != nil && !foul.Rule().IsRankingPoint {
-			if foul.Rule().IsTechnical {
-				breakdown.TechFoulCount++
-			} else {
-				breakdown.FoulCount++
-			}
-		}
-	}
-	breakdown.FoulPoints = scoreSummary.FoulPoints
-	breakdown.TotalPoints = scoreSummary.Score
-
-	if match.ShouldUpdateRankings() {
-		// Calculate and set the ranking points for the match.
-		var ranking game.Ranking
-		ranking.AddScoreSummary(scoreSummary, opponentScoreSummary, false)
-		breakdown.RP = ranking.RankingPoints
-	}
-
-	// Turn the breakdown struct into a map in order to be able to remove any fields that are disabled based on the
-	// event settings.
-	breakdownMap := make(map[string]interface{})
-	_ = mapstructure.Decode(breakdown, &breakdownMap)
-	if eventSettings.QuintetThreshold == 0 {
-		delete(breakdownMap, "quintetAchieved")
-	}
-
-	return breakdownMap
 }
 
 // Uploads the awards to The Blue Alliance.

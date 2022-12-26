@@ -2,79 +2,178 @@
   Copyright 2014 Team 254. All Rights Reserved.
   Author: pat@patfairbank.com (Patrick Fairbank)
 
-  UI for entering realtime scores.
+  UI for entering and tracking fouls and red/yellow cards.
 */}}
-{{define "title"}}Scoring Panel{{end}}
-{{define "body"}}
-<div id="matchName">&nbsp;</div>
-<div id="alliance">
-  <div class="scoring-section">
-    <div class="scoring-header">
-      <div>&nbsp;</div>
-      <div>Taxi</div>
-      <div>Endgame Status</div>
-    </div>
-    {{range $i := seq 3}}
-      <div>
-        <div id="team{{$i}}" class="team robot-field"></div>
-        <div id="taxiStatus{{$i}}" class="boolean robot-field" onclick="handleClick('{{$i}}');">
-          <div class="shortcut">{{$i}}</div>
-          <div class="value"></div>
-          <div class="shortcut"></div>
-        </div>
-        <div id="endgameStatus{{$i}}" class="endgame-status robot-field" onclick="handleClick('{{add $i 3}}');">
-          <div class="shortcut">{{add $i 3}}</div>
-          <div class="value"></div>
-          <div class="shortcut"></div>
-        </div>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Referee Panel - {{.EventSettings.Name}} - Cheesy Arena</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/img/apple-icon.png">
+    <link href="/static/css/lib/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/lib/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="/static/css/cheesy-arena.css" rel="stylesheet">
+    <link href="/static/css/referee_panel.css" rel="stylesheet">
+    <link href="/static/css/scoring_panel.css" rel="stylesheet">
+  </head>
+  
+  <style>
+
+  #alliance {
+    min-width: 35%;
+
+    padding-right: 25px;
+    padding-left: 25px;
+  }
+
+  .scoringSection {
+    position: relative;
+  }
+
+  #scoreRow {
+    padding: 150px;
+  }
+
+  .team{
+    width: min-content;
+  }
+
+  .btn-referee:active {
+    background-color: darkgreen;
+  }
+
+  </style>
+
+
+
+  <body>
+   <div class="match">
+    <h3 class="text-center">{{.MatchType}} Match {{.MatchDisplayName}}</h3>
+      <div class="row" style="color: black;">
+        <div id="matchState" class="col-sm-2 col-md-2 col-sm-offset-2 col-lg-offset-2 well well-sm text-center">&nbsp;</div>
+        <div id="matchTime" class="col-sm-2 well well-sm text-center">&nbsp;</div>
+        <div id="redScore" class="col-sm-2 well well-sm well-red text-center">&nbsp;</div>
+        <div id="blueScore" class="col-sm-2 well well-sm well-blue text-center">&nbsp;</div>
       </div>
-    {{end}}
-  </div>
-  {{if not .PlcIsEnabled}}
-    <div id="elements">
-      <div class="scoring-section">
-        <div>
-          <div>&nbsp;</div>
-          <div class="goal-header">Upper</div>
-          <div class="goal-header">Lower</div>
+
+        <!-- <div class="col"> -->
+          <div style="display: flex; flex-flow: row; align-self: stretch; justify-content: space-between;" >
+            <div id="alliance" data-alliance="red">
+              <div class="scoring-section">
+                {{template "card" dict "team" .Red1 "alliance" "red" "cards" .RedCards}}
+                {{template "card" dict "team" .Red2 "alliance" "red" "cards" .RedCards}}
+                {{template "card" dict "team" .Red3 "alliance" "red" "cards" .RedCards}}
+                </div>
+
+                <div id="redScoreButtons" style="flex-flow:row; flex-wrap: wrap; ">
+                  <!-- <div class="team">Auto</div> -->
+                  {{template "goal" dict "period" "Auto" "level" "Upper" "plus" "W" "minus" "Q"}}
+
+                  <!-- <div class="team">Tele</div> -->
+                  {{template "goal" dict "period" "Teleop" "level" "Upper" "plus" "S" "minus" "A"}}
+
+                  <!-- <div class="team">End</div> -->
+                  {{template "goal" dict "period" "Endgame" "level" "Upper" "plus" "X" "minus" "Z"}}
+                </div>
+
+                <div id="foulButtons"> 
+                {{range $rule := .Rules}}
+                  <a class="btn btn-xl btn-primary btn-referee"
+                      data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)" 
+                      title="{{$rule.Description}}"
+                      data-alliance="red">
+                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
+                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                  </a>
+                  {{end}}
+                </div>
+                  <br>
+            </div>
+
+
+            <div id="space" style="width: 10%;"></div>
+
+
+            <div id="alliance" data-alliance="blue">
+              <div class="scoring-section">
+                {{template "card" dict "team" .Blue1 "alliance" "blue" "cards" .BlueCards}}
+                {{template "card" dict "team" .Blue2 "alliance" "blue" "cards" .BlueCards}}
+                {{template "card" dict "team" .Blue3 "alliance" "blue" "cards" .BlueCards}}
+              </div>
+
+              <div id="blueScoreButtons" style=" flex-flow:row; flex-wrap: wrap; ">
+                <!-- <div class="team">Auto</div> -->
+                {{template "goal" dict "period" "Auto" "level" "Upper" "plus" "Y" "minus" "T"}}
+                
+                <!-- <div class="team">Tele</div> -->
+                {{template "goal" dict "period" "Teleop" "level" "Upper" "plus" "H" "minus" "G"}}
+
+
+                <!-- <div class="team">End</div> -->
+                {{template "goal" dict "period" "Endgame" "level" "Upper" "plus" "N" "minus" "B"}}
+
+
+              </div>
+
+                <div id="foulButtons">  
+                {{range $rule := .Rules}}
+                  <a class="btn btn-xl btn-primary btn-referee"
+                      data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)"
+                      title="{{$rule.Description}}"
+                      data-alliance="blue">
+                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
+                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                  </a>
+                {{end}}
+                  </div>
+                  <br>
+              </div>
         </div>
-        <div>
-          <div class="goal-period">Auto</div>
-          {{template "goal" dict "period" "auto" "level" "Upper" "plus" "W" "minus" "Q"}}
-          {{template "goal" dict "period" "auto" "level" "Lower" "plus" "S" "minus" "A"}}
-        </div>
-        <div>
-          <div class="goal-period">Teleop</div>
-          {{template "goal" dict "period" "teleop" "level" "Upper" "plus" "R" "minus" "E"}}
-          {{template "goal" dict "period" "teleop" "level" "Lower" "plus" "F" "minus" "D"}}
-        </div>
-      </div>
-    </div>
-  {{end}}
-</div>
-<div id="instructions">Click or use the labeled keyboard shortcuts to toggle each element</div>
-<div id="commitMatchScore">
-  <button type="button" class="btn btn-info" onclick="commitMatchScore();">
-    Commit Final Match Score
-  </button>
-</div>
-<div id="postMatchMessage">Waiting for the next match...</div>
+          
+            <br>                  
+                <div id="commitButtons" class="">
+                    <div class="text-center">
+                      <a class="btn btn-xl btn-danger btn-referee btn-referee-wide"
+                      onclick="location.reload();">Refresh</a>
+                      <a class="btn btn-xl btn-info btn-referee btn-referee-wide"
+                        onclick="commitMatch();">Submit Score</a>
+                  </div>
+                </div>
+  
+
+
+
+
+   </div>
+    <script src="/static/js/lib/jquery.min.js"></script>
+    <script src="/static/js/lib/jquery.json-2.4.min.js"></script>
+    <script src="/static/js/lib/jquery.websocket-0.0.1.js"></script>
+    <script src="/static/js/lib/bootstrap.min.js"></script>
+    <script src="/static/js/cheesy-websocket.js"></script>
+    <script src="/static/js/scoring_panel.js"></script>
+    <script src="/static/js/match_timing.js"></script>
+    <script src="/static/js/lib/bootstrap-datetimepicker.min.js"></script>
+  </body>
+</html>
+
+{{define "card"}}
+  <div class="btn team robot-field btn-card" data-old-yellow-card="{{.team.YellowCard}}" data-alliance="{{.alliance}}"
+      data-card-team="{{.team.Id}}" data-card="{{index .cards (print .team.Id)}}"
+      >{{.team.Id}}</div><br />
 {{end}}
-{{define "head"}}
-<link href="/static/css/scoring_panel.css" rel="stylesheet">
-{{end}}
-{{define "script"}}
-<script src="/static/js/match_timing.js"></script>
-<script src="/static/js/scoring_panel.js"></script>
-{{end}}
+
 {{define "goal"}}
 <div class="goal">
   <div class="number-button minus" onclick="handleClick('{{.minus}}');">
-    <div class="shortcut">{{.minus}}</div>-<div class="shortcut" style="opacity: 0;">{{.minus}}</div>
+    <div class="shortcut" style="opacity: 0;">{{.minus}}</div>-<div class="shortcut" style="opacity: 0;">{{.minus}}</div>
   </div>
-  <div id="{{.period}}Cargo{{.level}}"></div>
+  <div id="{{.period}}Cargo{{.level}}"><p class="team">{{.period}}</p></div>
   <div class="number-button plus" onclick="handleClick('{{.plus}}');">
-    <div class="shortcut">{{.plus}}</div>+<div class="shortcut" style="opacity: 0;">{{.plus}}</div>
+    <div class="shortcut" style="opacity: 0;">{{.plus}}</div>+<div class="shortcut" style="opacity: 0;">{{.plus}}</div>
   </div>
 </div>
 {{end}}

@@ -93,6 +93,13 @@ func (web *Web) settingsPostHandler(w http.ResponseWriter, r *http.Request) {
 	eventSettings.DoubleBonusRankingPointThreshold, _ =
 		strconv.Atoi(r.PostFormValue("doubleBonusRankingPointThreshold"))
 
+	eventSettings.FoulPointsAwarded, _ = strconv.Atoi(r.PostFormValue("foulPointsAwarded"))
+	eventSettings.TechFoulPointsAwarded, _ = strconv.Atoi(r.PostFormValue("techFoulPointsAwarded"))
+
+	eventSettings.RefereeAutoPointsAwarded, _ = strconv.Atoi(r.PostFormValue("refereeAutoPointsAwarded"))
+	eventSettings.RefereeTelePointsAwarded, _ = strconv.Atoi(r.PostFormValue("refereeTelePointsAwarded"))
+	eventSettings.RefereeEndPointsAwarded, _ = strconv.Atoi(r.PostFormValue("refereeEndPointsAwarded"))
+
 	if eventSettings.Ap2TeamChannel != 0 && eventSettings.Ap2TeamChannel == eventSettings.ApTeamChannel {
 		web.renderSettings(w, r, "Cannot use same channel for both access points.")
 		return

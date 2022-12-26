@@ -7,6 +7,13 @@ package web
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"sort"
+	"strconv"
+	"time"
+
 	"github.com/Team254/cheesy-arena/bracket"
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/game"
@@ -15,12 +22,6 @@ import (
 	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
-	"io"
-	"log"
-	"net/http"
-	"sort"
-	"strconv"
-	"time"
 )
 
 type MatchPlayListItem struct {

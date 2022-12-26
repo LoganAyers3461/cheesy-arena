@@ -7,11 +7,12 @@ package plc
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/goburrow/modbus"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/goburrow/modbus"
 )
 
 type Plc struct {
@@ -38,6 +39,7 @@ const (
 )
 
 // Discrete inputs
+//
 //go:generate stringer -type=input
 type input int
 
@@ -59,31 +61,17 @@ const (
 )
 
 // 16-bit registers
+//
 //go:generate stringer -type=register
 type register int
 
 const (
 	fieldIoConnection register = iota
-	redLowerHubBlue
-	redLowerHubFar
-	redLowerHubNear
-	redLowerHubRed
-	redUpperHubBlue
-	redUpperHubFar
-	redUpperHubNear
-	redUpperHubRed
-	blueLowerHubBlue
-	blueLowerHubFar
-	blueLowerHubNear
-	blueLowerHubRed
-	blueUpperHubBlue
-	blueUpperHubFar
-	blueUpperHubNear
-	blueUpperHubRed
 	registerCount
 )
 
 // Coils
+//
 //go:generate stringer -type=coil
 type coil int
 
@@ -96,18 +84,17 @@ const (
 	stackLightBlue
 	stackLightBuzzer
 	fieldResetLight
-	hubMotors
 	coilCount
 )
 
 // Bitmask for decoding fieldIoConnection into individual ArmorBlock connection statuses.
+//
 //go:generate stringer -type=armorBlock
 type armorBlock int
 
 const (
 	redDs armorBlock = iota
 	blueDs
-	hub
 	armorBlockCount
 )
 
@@ -222,34 +209,6 @@ func (plc *Plc) ResetMatch() {
 	plc.matchResetCycles = 0
 }
 
-// Returns the total number of cargo scored since match start in each level of the hub.
-func (plc *Plc) GetHubCounts() ([4]int, [4]int, [4]int, [4]int) {
-	return [4]int{
-			int(plc.registers[redLowerHubBlue]),
-			int(plc.registers[redLowerHubFar]),
-			int(plc.registers[redLowerHubNear]),
-			int(plc.registers[redLowerHubRed]),
-		},
-		[4]int{
-			int(plc.registers[redUpperHubBlue]),
-			int(plc.registers[redUpperHubFar]),
-			int(plc.registers[redUpperHubNear]),
-			int(plc.registers[redUpperHubRed]),
-		},
-		[4]int{
-			int(plc.registers[blueLowerHubBlue]),
-			int(plc.registers[blueLowerHubFar]),
-			int(plc.registers[blueLowerHubNear]),
-			int(plc.registers[blueLowerHubRed]),
-		},
-		[4]int{
-			int(plc.registers[blueUpperHubBlue]),
-			int(plc.registers[blueUpperHubFar]),
-			int(plc.registers[blueUpperHubNear]),
-			int(plc.registers[blueUpperHubRed]),
-		}
-}
-
 // Sets the on/off state of the stack lights on the scoring table.
 func (plc *Plc) SetStackLights(red, blue, orange, green bool) {
 	plc.coils[stackLightRed] = red
@@ -266,11 +225,6 @@ func (plc *Plc) SetStackBuzzer(state bool) {
 // Sets the on/off state of the field reset light.
 func (plc *Plc) SetFieldResetLight(state bool) {
 	plc.coils[fieldResetLight] = state
-}
-
-// Sets the on/off state of the agitator motors within the hub.
-func (plc *Plc) SetHubMotors(state bool) {
-	plc.coils[hubMotors] = state
 }
 
 func (plc *Plc) GetCycleState(max, index, duration int) bool {

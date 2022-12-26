@@ -45,6 +45,11 @@ type EventSettings struct {
 	CargoBonusRankingPointThresholdWithQuintet    int
 	HangarBonusRankingPointThreshold              int
 	DoubleBonusRankingPointThreshold              int
+	FoulPointsAwarded                             int
+	TechFoulPointsAwarded                         int
+	RefereeAutoPointsAwarded                      int
+	RefereeTelePointsAwarded                      int
+	RefereeEndPointsAwarded                       int
 }
 
 func (database *Database) GetEventSettings() (*EventSettings, error) {
@@ -73,11 +78,11 @@ func (database *Database) GetEventSettings() (*EventSettings, error) {
 		PauseDurationSec:            game.MatchTiming.PauseDurationSec,
 		TeleopDurationSec:           game.MatchTiming.TeleopDurationSec,
 		WarningRemainingDurationSec: game.MatchTiming.WarningRemainingDurationSec,
-		QuintetThreshold:            game.QuintetThreshold,
-		CargoBonusRankingPointThresholdWithoutQuintet: game.CargoBonusRankingPointThresholdWithoutQuintet,
-		CargoBonusRankingPointThresholdWithQuintet:    game.CargoBonusRankingPointThresholdWithQuintet,
-		HangarBonusRankingPointThreshold:              game.HangarBonusRankingPointThreshold,
-		DoubleBonusRankingPointThreshold:              game.DoubleBonusRankingPointThreshold,
+		FoulPointsAwarded:           game.FoulPointsAwarded,
+		TechFoulPointsAwarded:       game.TechFoulPointsAwarded,
+		RefereeAutoPointsAwarded:    game.RefereeAutoPointsAwarded,
+		RefereeTelePointsAwarded:    game.RefereeTelePointsAwarded,
+		RefereeEndPointsAwarded:     game.RefereeEndPointsAwarded,
 	}
 
 	if err := database.eventSettingsTable.create(&eventSettings); err != nil {

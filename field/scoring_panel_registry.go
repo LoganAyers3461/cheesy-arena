@@ -6,8 +6,9 @@
 package field
 
 import (
-	"github.com/Team254/cheesy-arena/websocket"
 	"sync"
+
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 type ScoringPanelRegistry struct {

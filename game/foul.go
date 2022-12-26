@@ -7,7 +7,6 @@ package game
 
 type Foul struct {
 	RuleId         int
-	TeamId         int
 	TimeInMatchSec float64
 }
 
@@ -22,8 +21,8 @@ func (foul *Foul) PointValue() int {
 		return 0
 	}
 	if foul.Rule().IsTechnical {
-		return 8
+		return TechFoulPointsAwarded
 	} else {
-		return 4
+		return FoulPointsAwarded
 	}
 }

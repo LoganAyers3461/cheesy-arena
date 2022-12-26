@@ -10,7 +10,7 @@
     <head>
       {{template "head_common" .}}
     </head>
-    <body>
+    <body style="background-color:#222;">
       <div class="navbar navbar-default navbar-static-top" role="navigation">
         <div class="container">
           <div class="navbar-header">
@@ -50,11 +50,8 @@
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Panel</a>
                 <ul class="dropdown-menu">
-                  <li><a href="/panels/referee">Referee</a></li>
-                  <li class="divider"></li>
-                  <li class="dropdown-header">Scoring</li>
-                  <li><a href="/panels/scoring/red">Red</a></li>
-                  <li><a href="/panels/scoring/blue">Blue</a></li>
+                  <li><a href="/panels/referee">Head Referee</a></li>
+                  <li><a href="/panels/scoring/">Referee</a></li>
                 </ul>
               </li>
               <li class="dropdown">
@@ -129,6 +126,7 @@
               <p>A field management system that just works.</p>
               <p>Copyright &copy; 2014-2022 Team 254. All Rights Reserved.</p>
               <p><a href="https://github.com/Team254/cheesy-arena">https://github.com/Team254/cheesy-arena</a></p>
+              <p>Modifications made under the open source license by <a href="https://github.com/LoganAyers3461">Logan Ayers</a></p>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -149,7 +147,7 @@
       {{template "head_common" .}}
       {{template "head" .}}
     </head>
-    <body>
+    <body style="background-color:#222; color:gray">
       <div class="container">
         {{template "body" .}}
       </div>

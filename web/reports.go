@@ -9,14 +9,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/bracket"
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/tournament"
 	"github.com/gorilla/mux"
 	"github.com/jung-kurt/gofpdf"
-	"net/http"
-	"strconv"
 )
 
 // Generates a CSV-formatted report of the qualification rankings.
@@ -77,10 +78,10 @@ func (web *Web) rankingsPdfReportHandler(w http.ResponseWriter, r *http.Request)
 		pdf.SetFont("Arial", "", 10)
 		pdf.CellFormat(colWidths["Team"], rowHeight, strconv.Itoa(ranking.TeamId), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(colWidths["RP"], rowHeight, strconv.Itoa(ranking.RankingPoints), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colWidths["Match"], rowHeight, strconv.Itoa(ranking.MatchPoints), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(colWidths["Hangar"], rowHeight, strconv.Itoa(ranking.HangarPoints), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colWidths["Match"], rowHeight, strconv.Itoa(ranking.TeleopPoints), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(colWidths["Hangar"], rowHeight, strconv.Itoa(ranking.EndgamePoints), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(
-			colWidths["Auto"], rowHeight, strconv.Itoa(ranking.TaxiAndAutoCargoPoints), "1", 0, "C", false, 0, "",
+			colWidths["Auto"], rowHeight, strconv.Itoa(ranking.AutoPoints), "1", 0, "C", false, 0, "",
 		)
 		record := fmt.Sprintf("%d-%d-%d", ranking.Wins, ranking.Losses, ranking.Ties)
 		pdf.CellFormat(colWidths["W-L-T"], rowHeight, record, "1", 0, "C", false, 0, "")

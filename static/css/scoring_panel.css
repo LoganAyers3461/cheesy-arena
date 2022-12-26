@@ -62,7 +62,7 @@ body {
 .team {
   display: flex;
   justify-content: center;
-  font-size: 5vw;
+  font-size: 3vw;
   font-weight: bold;
 }
 .boolean[data-value="false"] {
@@ -110,7 +110,7 @@ body {
   color: #666;
 }
 .goal {
-  width: 17vw;
+  width: 100%;
   height: 7vw;
   margin: 0.4vw 3vw;
   display: flex;
@@ -133,6 +133,14 @@ body {
 .minus {
   background: #633;
 }
+
+.plus:active {
+  background: rgb(91, 255, 132);
+}
+.minus:active {
+  background: rgb(255, 127, 127);
+}
+
 #instructions {
   margin-top: 0.3vw;
 }
@@ -151,3 +159,4 @@ body {
 #commitMatchScore>button {
   font-size: 1vw;
 }
+

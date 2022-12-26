@@ -167,11 +167,12 @@ func (arena *Arena) LoadSettings() error {
 	game.UpdateMatchSounds()
 	arena.MatchTimingNotifier.Notify()
 
-	game.QuintetThreshold = settings.QuintetThreshold
-	game.CargoBonusRankingPointThresholdWithoutQuintet = settings.CargoBonusRankingPointThresholdWithoutQuintet
-	game.CargoBonusRankingPointThresholdWithQuintet = settings.CargoBonusRankingPointThresholdWithQuintet
-	game.HangarBonusRankingPointThreshold = settings.HangarBonusRankingPointThreshold
-	game.DoubleBonusRankingPointThreshold = settings.DoubleBonusRankingPointThreshold
+	game.FoulPointsAwarded = settings.FoulPointsAwarded
+	game.TechFoulPointsAwarded = settings.TechFoulPointsAwarded
+
+	game.RefereeAutoPointsAwarded = settings.RefereeAutoPointsAwarded
+	game.RefereeTelePointsAwarded = settings.RefereeTelePointsAwarded
+	game.RefereeEndPointsAwarded = settings.RefereeEndPointsAwarded
 
 	// Reconstruct the playoff bracket in memory.
 	if err = arena.CreatePlayoffBracket(); err != nil {
@@ -366,9 +367,9 @@ func (arena *Arena) AbortMatch() error {
 	}
 	arena.MatchState = PostMatch
 	arena.matchAborted = true
-	arena.AudienceDisplayMode = "blank"
+	arena.AudienceDisplayMode = "intro"
 	arena.AudienceDisplayModeNotifier.Notify()
-	arena.AllianceStationDisplayMode = "logo"
+	arena.AllianceStationDisplayMode = "blank"
 	arena.AllianceStationDisplayModeNotifier.Notify()
 	return nil
 }
@@ -404,7 +405,9 @@ func (arena *Arena) StartTimeout(durationSec int) error {
 	arena.MatchStartTime = time.Now()
 	arena.LastMatchTimeSec = -1
 	arena.AllianceStationDisplayMode = "timeout"
+	arena.AudienceDisplayMode = "timeout"
 	arena.AllianceStationDisplayModeNotifier.Notify()
+	arena.AudienceDisplayModeNotifier.Notify()
 
 	return nil
 }
@@ -467,7 +470,7 @@ func (arena *Arena) Update() {
 			sendDsPacket = true
 		}
 		arena.Plc.ResetMatch()
-		arena.Plc.SetHubMotors(true)
+		// arena.Plc.SetHubMotors(true)
 	case WarmupPeriod:
 		auto = true
 		enabled = false
@@ -509,12 +512,14 @@ func (arena *Arena) Update() {
 			enabled = false
 			sendDsPacket = true
 			go func() {
+				arena.AllianceStationDisplayMode = "blank"
+				arena.AllianceStationDisplayModeNotifier.Notify()
+
 				// Leave the scores on the screen briefly at the end of the match.
 				time.Sleep(time.Second * matchEndScoreDwellSec)
-				arena.AudienceDisplayMode = "blank"
+				arena.AudienceDisplayMode = "intro"
 				arena.AudienceDisplayModeNotifier.Notify()
-				arena.AllianceStationDisplayMode = "logo"
-				arena.AllianceStationDisplayModeNotifier.Notify()
+
 			}()
 			go func() {
 				// Configure the network in advance for the next match after a delay.
@@ -528,9 +533,9 @@ func (arena *Arena) Update() {
 			go func() {
 				// Leave the timer on the screen briefly at the end of the timeout period.
 				time.Sleep(time.Second * matchEndScoreDwellSec)
-				arena.AudienceDisplayMode = "blank"
+				arena.AudienceDisplayMode = "intro"
 				arena.AudienceDisplayModeNotifier.Notify()
-				arena.AllianceStationDisplayMode = "logo"
+				arena.AllianceStationDisplayMode = "match"
 				arena.AllianceStationDisplayModeNotifier.Notify()
 			}()
 		}
@@ -780,20 +785,20 @@ func (arena *Arena) handlePlcInput() {
 	if arena.Plc.GetFieldEstop() && arena.MatchTimeSec() > 0 && !arena.matchAborted {
 		arena.AbortMatch()
 	}
-	redEstops, blueEstops := arena.Plc.GetTeamEstops()
-	arena.handleEstop("R1", redEstops[0])
-	arena.handleEstop("R2", redEstops[1])
-	arena.handleEstop("R3", redEstops[2])
-	arena.handleEstop("B1", blueEstops[0])
-	arena.handleEstop("B2", blueEstops[1])
-	arena.handleEstop("B3", blueEstops[2])
-	redEthernets, blueEthernets := arena.Plc.GetEthernetConnected()
-	arena.AllianceStations["R1"].Ethernet = redEthernets[0]
-	arena.AllianceStations["R2"].Ethernet = redEthernets[1]
-	arena.AllianceStations["R3"].Ethernet = redEthernets[2]
-	arena.AllianceStations["B1"].Ethernet = blueEthernets[0]
-	arena.AllianceStations["B2"].Ethernet = blueEthernets[1]
-	arena.AllianceStations["B3"].Ethernet = blueEthernets[2]
+	// redEstops, blueEstops := arena.Plc.GetTeamEstops()
+	// arena.handleEstop("R1", redEstops[0])
+	// arena.handleEstop("R2", redEstops[1])
+	// arena.handleEstop("R3", redEstops[2])
+	// arena.handleEstop("B1", blueEstops[0])
+	// arena.handleEstop("B2", blueEstops[1])
+	// arena.handleEstop("B3", blueEstops[2])
+	// redEthernets, blueEthernets := arena.Plc.GetEthernetConnected()
+	arena.AllianceStations["R1"].Ethernet = true //redEthernets[0]
+	arena.AllianceStations["R2"].Ethernet = true // redEthernets[1]
+	arena.AllianceStations["R3"].Ethernet = true //redEthernets[2]
+	arena.AllianceStations["B1"].Ethernet = true //blueEthernets[0]
+	arena.AllianceStations["B2"].Ethernet = true //blueEthernets[1]
+	arena.AllianceStations["B3"].Ethernet = true // blueEthernets[2]
 
 	if arena.MatchState == PreMatch || arena.MatchState == PostMatch || arena.MatchState == TimeoutActive ||
 		arena.MatchState == PostTimeout {
@@ -805,24 +810,24 @@ func (arena *Arena) handlePlcInput() {
 	oldRedScore := *redScore
 	blueScore := &arena.BlueRealtimeScore.CurrentScore
 	oldBlueScore := *blueScore
-	matchStartTime := arena.MatchStartTime
-	currentTime := time.Now()
+	// matchStartTime := arena.MatchStartTime
+	// currentTime := time.Now()
 
 	if arena.Plc.IsEnabled() {
-		// Handle hub.
-		redLowerHubCounts, redUpperHubCounts, blueLowerHubCounts, blueUpperHubCounts := arena.Plc.GetHubCounts()
-		redHub := &arena.RedRealtimeScore.hub
-		redHub.UpdateState(redLowerHubCounts, redUpperHubCounts, matchStartTime, currentTime)
-		redScore.AutoCargoLower = redHub.AutoCargoLower
-		redScore.AutoCargoUpper = redHub.AutoCargoUpper
-		redScore.TeleopCargoLower = redHub.TeleopCargoLower
-		redScore.TeleopCargoUpper = redHub.TeleopCargoUpper
-		blueHub := &arena.BlueRealtimeScore.hub
-		blueHub.UpdateState(blueLowerHubCounts, blueUpperHubCounts, matchStartTime, currentTime)
-		blueScore.AutoCargoLower = blueHub.AutoCargoLower
-		blueScore.AutoCargoUpper = blueHub.AutoCargoUpper
-		blueScore.TeleopCargoLower = blueHub.TeleopCargoLower
-		blueScore.TeleopCargoUpper = blueHub.TeleopCargoUpper
+		// // Handle hub.
+		// redLowerHubCounts, redUpperHubCounts, blueLowerHubCounts, blueUpperHubCounts := arena.Plc.GetHubCounts()
+		// redHub := &arena.RedRealtimeScore.hub
+		// redHub.UpdateState(redLowerHubCounts, redUpperHubCounts, matchStartTime, currentTime)
+		// redScore.AutoCargoLower = redHub.AutoCargoLower
+		// redScore.AutoCargoUpper = redHub.AutoCargoUpper
+		// redScore.TeleopCargoLower = redHub.TeleopCargoLower
+		// redScore.TeleopCargoUpper = redHub.TeleopCargoUpper
+		// blueHub := &arena.BlueRealtimeScore.hub
+		// blueHub.UpdateState(blueLowerHubCounts, blueUpperHubCounts, matchStartTime, currentTime)
+		// blueScore.AutoCargoLower = blueHub.AutoCargoLower
+		// blueScore.AutoCargoUpper = blueHub.AutoCargoUpper
+		// blueScore.TeleopCargoLower = blueHub.TeleopCargoLower
+		// blueScore.TeleopCargoUpper = blueHub.TeleopCargoUpper
 	}
 
 	if !oldRedScore.Equals(redScore) || !oldBlueScore.Equals(blueScore) {
@@ -864,7 +869,7 @@ func (arena *Arena) handlePlcOutput() {
 		if arena.lastMatchState != PostMatch {
 			go func() {
 				time.Sleep(time.Second * game.HubTeleopGracePeriodSec)
-				arena.Plc.SetHubMotors(false)
+				// arena.Plc.SetHubMotors(false)
 			}()
 		}
 	case AutoPeriod:

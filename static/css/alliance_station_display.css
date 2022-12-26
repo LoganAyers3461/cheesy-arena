@@ -14,8 +14,12 @@ body {
   color: #fff;
 }
 body[data-mode=logo] {
-  background-color: #000;
+  background-color: #fff;
 }
+body[data-mode=fieldReset] {
+  background-color: #0a3;
+}
+
 body[data-mode=fieldReset] {
   background-color: #0a3;
 }
@@ -35,6 +39,8 @@ body[data-mode=fieldReset] .mode#fieldReset {
 }
 body[data-mode=timeout] .mode#match {
   display: block;
+  background-color:white;
+  color:black;
 }
 
 /* Logo Mode */
@@ -44,7 +50,7 @@ body[data-mode=timeout] .mode#match {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 105%;
+  height: 50%;
   margin: auto auto;
 }
 
@@ -68,26 +74,51 @@ body[data-mode=timeout] .mode#match {
   width: 100%;
   height: 100%;
 }
+
+/*
 #match[data-state=WARMUP_PERIOD], #match[data-state=AUTO_PERIOD], #match[data-state=PAUSE_PERIOD],
-    #match[data-state=TELEOP_PERIOD], #match[data-state=POST_MATCH], #match[data-state=TIMEOUT_ACTIVE],
-    #match[data-state=POST_TIMEOUT] {
+    #match[data-state=TELEOP_PERIOD], #match[data-state=POST_MATCH], #match[data-state=TIMEOUT_ACTIVE] {
   background-color: #fff;
   color: #000;
 }
+
+*/
+
+#match[data-state=PRE_MATCH] { 
+	backgound-color: #000;
+	color: #fff;
+}
+
+
 #preMatch, #inMatch {
   display: none;
 }
-#match[data-state=PRE_MATCH] #preMatch {
+
+[data-state=SHOW_SCORES] #inMatch {
   display: block;
 }
-#match[data-state=WARMUP_PERIOD] #inMatch, #match[data-state=AUTO_PERIOD] #inMatch,
-    #match[data-state=PAUSE_PERIOD] #inMatch, #match[data-state=TELEOP_PERIOD] #inMatch,
-    #match[data-state=POST_MATCH] #inMatch, #match[data-state=TIMEOUT_ACTIVE] #inMatch,
+
+[data-state=TIMEOUT_ACTIVE] #inMatch {
+  display: block;
+  background-color: white;
+}
+
+#match[data-state=SHOW_SCORES] {
+	background-color:white;
+	color: black;
+}
+
+
+#match[data-state=PRE_MATCH] #preMatch, #match[data-state=WARMUP_PERIOD] #preMatch, #match[data-state=AUTO_PERIOD] #preMatch,
+    #match[data-state=PAUSE_PERIOD] #preMatch, #match[data-state=TELEOP_PERIOD] #preMatch,
+    #match[data-state=POST_MATCH] #preMatch, #match[data-state=TIMEOUT_ACTIVE] #inMatch,
     #match[data-state=POST_TIMEOUT] #inMatch {
   display: block;
 }
 
+
 /* In Match */
+
 #inMatch .datapoint {
   display: none;
   position: absolute;
@@ -100,6 +131,8 @@ body[data-mode=timeout] .mode#match {
   font-size: 500px;
   line-height: 500px;
   text-align: center;
+  
+  
 }
 body[data-position=left] #inMatch #redScore {
   display: block;
@@ -113,20 +146,18 @@ body[data-position=right] #inMatch #blueScore {
   color: #07f;
 }
 
-/* Pre Match */
-#preMatch #teamNumber {
-  position: absolute;
-  top: 100px;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  font-size: 450px;
-  line-height: 450px;
-  text-align: center;
+#match[data-state=TIMEOUT_ACTIVE] #inMatch #timeout {
+	display:block;
 }
-#preMatch .databar {
+
+#match[data-state=SHOW_SCORES] #inMatch #timeout {
+	display:none;
+}
+
+#inMatch .databar {
   position: absolute;
-  bottom: 100px;
+  top: 800px;
+  bottom: 0;
   left: 0;
   right: 0;
   margin: 0 auto;
@@ -135,9 +166,49 @@ body[data-position=right] #inMatch #blueScore {
   text-align: center;
   font-family: "FuturaLT";
   font-size: 120px;
-  color: #fff;
+
 }
-#preMatch .databar#disabled {
+
+
+/* Pre Match */
+#preMatch #teamNumber {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  font-size: 500px;
+  line-height: 500px;
+  text-align: center;
+}
+#preMatch .databar {
+  position: absolute;
+  top: 600px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  height: 200px;
+  line-height: 200px;
+  text-align: center;
+  font-family: "FuturaLT";
+  font-size: 120px;
+
+}
+
+#preMatch .databar2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  height: 200px;
+  line-height: 200px;
+  text-align: center;
+  font-size: 120px;
+}
+
+#preMatch .databar2#disabled {
   font-family: "FuturaLTBold";
   display: none;
 }
@@ -148,24 +219,19 @@ body[data-position=right] #inMatch #blueScore {
   display: block;
 }
 #match[data-status=bypass] #teamName {
-  display: none;
+  display: block;
 }
-[data-alliance-bg=R], [data-status=R] {
+#match[data-alliance-bg=R], [data-status=R] {
   background-color: #d00;
 }
-[data-alliance-bg=B], [data-status=B] {
+
+
+#match[data-alliance-bg=B], [data-status=B] {
   background-color: #00c;
 }
+
+
+
 #teamRank {
   background-color: transparent;
-}
-#elimAllianceInfo {
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  text-align: center;
-  font-family: "FuturaLT";
-  font-size: 50px;
 }

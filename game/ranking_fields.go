@@ -8,16 +8,16 @@ package game
 import "math/rand"
 
 type RankingFields struct {
-	RankingPoints          int
-	MatchPoints            int
-	HangarPoints           int
-	TaxiAndAutoCargoPoints int
-	Random                 float64
-	Wins                   int
-	Losses                 int
-	Ties                   int
-	Disqualifications      int
-	Played                 int
+	RankingPoints     int
+	AutoPoints        int
+	EndgamePoints     int
+	TeleopPoints      int
+	Random            float64
+	Wins              int
+	Losses            int
+	Ties              int
+	Disqualifications int
+	Played            int
 }
 
 type Ranking struct {
@@ -51,20 +51,12 @@ func (fields *RankingFields) AddScoreSummary(ownScore *ScoreSummary, opponentSco
 	} else {
 		fields.Losses += 1
 	}
-	if ownScore.CargoBonusRankingPoint {
-		fields.RankingPoints += 1
-	}
-	if ownScore.HangarBonusRankingPoint {
-		fields.RankingPoints += 1
-	}
-	if ownScore.DoubleBonusRankingPoint {
-		fields.RankingPoints += 1
-	}
 
 	// Assign tiebreaker points.
-	fields.MatchPoints += ownScore.MatchPoints
-	fields.HangarPoints += ownScore.HangarPoints
-	fields.TaxiAndAutoCargoPoints += ownScore.TaxiPoints + ownScore.AutoCargoPoints
+	fields.AutoPoints += ownScore.AutoPoints
+	fields.EndgamePoints += ownScore.EndgamePoints
+	fields.TeleopPoints += ownScore.TeleopPoints
+
 }
 
 // Helper function to implement the required interface for Sort.
@@ -72,23 +64,22 @@ func (rankings Rankings) Len() int {
 	return len(rankings)
 }
 
-// Helper function to implement the required interface for Sort.
 func (rankings Rankings) Less(i, j int) bool {
 	a := rankings[i]
 	b := rankings[j]
 
 	// Use cross-multiplication to keep it in integer math.
 	if a.RankingPoints*b.Played == b.RankingPoints*a.Played {
-		if a.MatchPoints*b.Played == b.MatchPoints*a.Played {
-			if a.HangarPoints*b.Played == b.HangarPoints*a.Played {
-				if a.TaxiAndAutoCargoPoints*b.Played == b.TaxiAndAutoCargoPoints*a.Played {
+		if a.AutoPoints*b.Played == b.AutoPoints*a.Played {
+			if a.EndgamePoints*b.Played == b.EndgamePoints*a.Played {
+				if a.TeleopPoints*b.Played == b.TeleopPoints*a.Played {
 					return a.Random > b.Random
 				}
-				return a.TaxiAndAutoCargoPoints*b.Played > b.TaxiAndAutoCargoPoints*a.Played
+				return a.TeleopPoints*b.Played > b.TeleopPoints*a.Played
 			}
-			return a.HangarPoints*b.Played > b.HangarPoints*a.Played
+			return a.EndgamePoints*b.Played > b.EndgamePoints*a.Played
 		}
-		return a.MatchPoints*b.Played > b.MatchPoints*a.Played
+		return a.AutoPoints*b.Played > b.AutoPoints*a.Played
 	}
 	return a.RankingPoints*b.Played > b.RankingPoints*a.Played
 }

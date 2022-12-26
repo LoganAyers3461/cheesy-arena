@@ -7,10 +7,11 @@ html {
   cursor: default;
   -webkit-user-select: none;
   -moz-user-select: none;
+  
 }
 body {
   background-color: #222;
-  padding: 50px;
+  padding: 30px;
   color: #fff;
 }
 h3, h4 {
@@ -51,11 +52,16 @@ tr {
   margin: 5px 5px;
   font-size: 30px;
   cursor: default;
-  background-color: #444;
+  background-color: rgba(68, 68, 68, 0);
   color: #fff;
+  border-radius: 25px;
 }
 .btn-card[data-card="yellow"] {
   background-color: #dd0;
+  color: rgb(255, 255, 255);
+  stroke: #222;
+  stroke-width: 0.3px;
+  text-decoration: black;
 }
 .btn-card[data-card="red"] {
   background-color: #cb210e;
@@ -63,4 +69,47 @@ tr {
 .btn-card[data-old-yellow-card="true"] {
   border: 5px solid #ff0;
   margin: 0px 5px;
+}
+
+
+
+.match[data-state=AUTO_PERIOD] #foulList, #match[data-state=PAUSE_PERIOD] #foulList, .match[data-state=TELEOP_PERIOD]  #foulList {
+  display: none;
+} 
+.match[data-state=POST_MATCH] #foulList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.match[data-state=PRE_MATCH] #commitButtons, .match[data-state=AUTO_PERIOD] #commitButtons, .match[data-state=PAUSE_PERIOD] #commitButtons, .match[data-state=TELEOP_PERIOD]  #commitButtons, .match[data-state=TIMEOUT_ACTIVE]  #commitButtons  {
+  display: none;
+} 
+  
+.match[data-state=POST_MATCH] #commitButtons {
+  display: block;
+}
+
+.match[data-state=POST_MATCH] #foulButtons, .match[data-state=AUTO_PERIOD] #foulButtons, .match[data-state=TELEOP_PERIOD]  #foulButtons {
+  display: flex; 
+  flex-flow:row;
+}
+
+.match[data-state=PRE_MATCH] #foulButtons, .match[data-state=TIMEOUT_ACTIVE]  #foulButtons {
+  display: none;
+}
+
+.match[data-state=PRE_MATCH] #blueScoreButtons, .match[data-state=TIMEOUT_ACTIVE]  #blueScoreButtons {
+  display: none;
+}
+
+.match[data-state=AUTO_PERIOD] #blueScoreButtons, .match[data-state=TELEOP_PERIOD]  #blueScoreButtons, .match[data-state=POST_MATCH]  #blueScoreButtons, .match[data-state=PAUSE_PERIOD] #blueScoreButtons {
+  display: flex;
+}
+
+.match[data-state=PRE_MATCH] #redScoreButtons, .match[data-state=TIMEOUT_ACTIVE]  #redScoreButtons {
+  display: none;
+}
+.match[data-state=AUTO_PERIOD] #redScoreButtons, .match[data-state=TELEOP_PERIOD]  #redScoreButtons, .match[data-state=POST_MATCH]  #redScoreButtons, .match[data-state=PAUSE_PERIOD] #redScoreButtons {
+  display: flex;
 }

@@ -6,33 +6,18 @@
 package game
 
 func TestScore1() *Score {
-	fouls := []Foul{
-		{13, 25, 150},
-		{14, 1868, 0},
-		{15, 25, 25.2},
-	}
 	return &Score{
-		TaxiStatuses:     [3]bool{true, true, false},
-		AutoCargoLower:   [4]int{0, 0, 1, 0},
-		AutoCargoUpper:   [4]int{3, 1, 1, 1},
-		TeleopCargoLower: [4]int{0, 2, 0, 0},
-		TeleopCargoUpper: [4]int{1, 5, 0, 2},
-		EndgameStatuses:  [3]EndgameStatus{EndgameLow, EndgameNone, EndgameTraversal},
-		Fouls:            fouls,
-		ElimDq:           false,
+		AutoPoints:    45,
+		TeleopPoints:  80,
+		EndgamePoints: 30,
 	}
 }
 
 func TestScore2() *Score {
 	return &Score{
-		TaxiStatuses:     [3]bool{false, true, false},
-		AutoCargoLower:   [4]int{0, 0, 0, 1},
-		AutoCargoUpper:   [4]int{1, 1, 1, 0},
-		TeleopCargoLower: [4]int{2, 0, 2, 7},
-		TeleopCargoUpper: [4]int{2, 7, 0, 1},
-		EndgameStatuses:  [3]EndgameStatus{EndgameNone, EndgameLow, EndgameHigh},
-		Fouls:            []Foul{},
-		ElimDq:           false,
+		AutoPoints:    15,
+		TeleopPoints:  40,
+		EndgamePoints: 25,
 	}
 }
 

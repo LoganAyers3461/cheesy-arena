@@ -5,11 +5,12 @@ package web
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/tournament"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMatchReview(t *testing.T) {
@@ -154,8 +155,8 @@ func TestMatchReviewEditCurrentMatch(t *testing.T) {
 	// Check that the persisted match is still unedited and that the realtime scores have been updated instead.
 	match2, _ := web.arena.Database.GetMatchById(match.Id)
 	assert.Equal(t, game.MatchNotPlayed, match2.Status)
-	assert.Equal(t, [4]int{5, 1, 7, 2}, web.arena.RedRealtimeScore.CurrentScore.TeleopCargoLower)
-	assert.Equal(t, [4]int{2, 2, 2, 2}, web.arena.BlueRealtimeScore.CurrentScore.TeleopCargoUpper)
+	assert.Equal(t, [4]int{5, 1, 7, 2}, web.arena.RedRealtimeScore.CurrentScore.AutoPoints)
+	assert.Equal(t, [4]int{2, 2, 2, 2}, web.arena.BlueRealtimeScore.CurrentScore.TeleopPoints)
 	assert.Equal(t, 0, len(web.arena.RedRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.BlueRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.RedRealtimeScore.Cards))
