@@ -207,6 +207,12 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			web.arena.AllianceStationDisplayMode = "fieldReset"
 			web.arena.AllianceStationDisplayModeNotifier.Notify()
 			continue // Don't reload.
+		case "matchReview":
+			if web.arena.MatchState != field.PostMatch {
+				// Don't allow signaling a review until the match is over.
+				continue
+			}
+			web.arena.AudienceDisplayModeNotifier.NotifyWithMessage("matchReview")
 		case "commitMatch":
 			if web.arena.MatchState != field.PostMatch {
 				// Don't allow committing the fouls until the match is over.

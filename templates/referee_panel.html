@@ -83,8 +83,7 @@
                       data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)"
                       title="{{$rule.Description}}"
                       data-alliance="red">
-                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
-                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                    {{$rule.RuleNumber}}
                   </a>
                   {{end}}
                 </div>
@@ -117,8 +116,7 @@
                       data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)" 
                       title="{{$rule.Description}}"
                       data-alliance="blue">
-                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
-                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                    {{$rule.RuleNumber}}
                   </a>
                 {{end}}
                   </div>
@@ -129,7 +127,7 @@
             <br>
           <div class="container-fluid">
             <div class="row">
-              <div id="foulList" class="col-xs-6">
+              <div id="foulList" class="col-xs-4">
 
                 <h><span class="label label-scoring" id="refereeScoreStatus">Head Referee</span>
                   <span class="label label-scoring" id="redScoreStatus"></span></h>
@@ -151,10 +149,12 @@
         
 
                   
-                <div id="commitButtons" class="col-xs-6">
+                <div id="commitButtons" class="col-xs-8">
                   <div class="text-center">
                     <a class="btn btn-xl btn-danger btn-referee btn-referee-wide"
                     onclick="location.reload();">Refresh</a>
+                    <a class="btn btn-xl btn-danger btn-referee btn-referee-wide"
+                    onclick="signalReview();">Match Under Review</a>
                     <a class="btn btn-xl btn-success btn-referee btn-referee-wide"
                         onclick="signalReset();">Signal Reset</a>
                       <a class="btn btn-xl btn-info btn-referee btn-referee-wide"

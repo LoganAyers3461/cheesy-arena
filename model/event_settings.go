@@ -8,48 +8,46 @@ package model
 import "github.com/Team254/cheesy-arena/game"
 
 type EventSettings struct {
-	Id                                            int `db:"id"`
-	Name                                          string
-	ElimType                                      string
-	NumElimAlliances                              int
-	SelectionRound2Order                          string
-	SelectionRound3Order                          string
-	TBADownloadEnabled                            bool
-	TbaPublishingEnabled                          bool
-	TbaEventCode                                  string
-	TbaSecretId                                   string
-	TbaSecret                                     string
-	NetworkSecurityEnabled                        bool
-	UseMultiConnectionAPConfiguration             bool
-	ApAddress                                     string
-	ApUsername                                    string
-	ApPassword                                    string
-	ApTeamChannel                                 int
-	ApAdminChannel                                int
-	ApAdminWpaKey                                 string
-	Ap2Address                                    string
-	Ap2Username                                   string
-	Ap2Password                                   string
-	Ap2TeamChannel                                int
-	SwitchAddress                                 string
-	SwitchPassword                                string
-	PlcAddress                                    string
-	AdminPassword                                 string
-	WarmupDurationSec                             int
-	AutoDurationSec                               int
-	PauseDurationSec                              int
-	TeleopDurationSec                             int
-	WarningRemainingDurationSec                   int
-	QuintetThreshold                              int
-	CargoBonusRankingPointThresholdWithoutQuintet int
-	CargoBonusRankingPointThresholdWithQuintet    int
-	HangarBonusRankingPointThreshold              int
-	DoubleBonusRankingPointThreshold              int
-	FoulPointsAwarded                             int
-	TechFoulPointsAwarded                         int
-	RefereeAutoPointsAwarded                      int
-	RefereeTelePointsAwarded                      int
-	RefereeEndPointsAwarded                       int
+	Id                                int `db:"id"`
+	Name                              string
+	ElimType                          string
+	NumElimAlliances                  int
+	SelectionRound2Order              string
+	SelectionRound3Order              string
+	TBADownloadEnabled                bool
+	TbaPublishingEnabled              bool
+	TbaEventCode                      string
+	TbaSecretId                       string
+	TbaSecret                         string
+	NetworkSecurityEnabled            bool
+	UseMultiConnectionAPConfiguration bool
+	ApAddress                         string
+	ApUsername                        string
+	ApPassword                        string
+	ApTeamChannel                     int
+	ApAdminChannel                    int
+	ApAdminWpaKey                     string
+	Ap2Address                        string
+	Ap2Username                       string
+	Ap2Password                       string
+	Ap2TeamChannel                    int
+	SwitchAddress                     string
+	SwitchPassword                    string
+	PlcAddress                        string
+	AdminPassword                     string
+	WarmupDurationSec                 int
+	AutoDurationSec                   int
+	PauseDurationSec                  int
+	TeleopDurationSec                 int
+	WarningRemainingDurationSec       int
+	FoulPointsAwarded                 int
+	TechFoulPointsAwarded             int
+	AutoPhaseOnePointsAwarded         int
+	AutoPhaseTwoPointsAwarded         int
+	AutoPhaseThreePointsAwarded       int
+	RefereeAutoPointsAwarded          int
+	RefereeTelePointsAwarded          int
+	RefereeEndPointsAwarded           int
 }
 
 func (database *Database) GetEventSettings() (*EventSettings, error) {
@@ -83,6 +81,9 @@ func (database *Database) GetEventSettings() (*EventSettings, error) {
 		RefereeAutoPointsAwarded:    game.RefereeAutoPointsAwarded,
 		RefereeTelePointsAwarded:    game.RefereeTelePointsAwarded,
 		RefereeEndPointsAwarded:     game.RefereeEndPointsAwarded,
+		AutoPhaseOnePointsAwarded:   game.AutoPhaseOnePointsAwarded,
+		AutoPhaseTwoPointsAwarded:   game.AutoPhaseTwoPointsAwarded,
+		AutoPhaseThreePointsAwarded: game.AutoPhaseThreePointsAwarded,
 	}
 
 	if err := database.eventSettingsTable.create(&eventSettings); err != nil {

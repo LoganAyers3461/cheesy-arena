@@ -4,8 +4,9 @@
 package model
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEventSettingsReadWrite(t *testing.T) {
@@ -32,10 +33,6 @@ func TestEventSettingsReadWrite(t *testing.T) {
 			PauseDurationSec:            2,
 			TeleopDurationSec:           135,
 			WarningRemainingDurationSec: 30,
-			QuintetThreshold:            5,
-			CargoBonusRankingPointThresholdWithoutQuintet: 20,
-			CargoBonusRankingPointThresholdWithQuintet:    18,
-			HangarBonusRankingPointThreshold:              16,
 		},
 		*eventSettings,
 	)

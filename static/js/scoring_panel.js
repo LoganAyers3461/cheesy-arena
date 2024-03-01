@@ -39,7 +39,19 @@ var commitFoul = function(penaltyButton) {
 
 
 
-
+var cycleAutoPhase = function(cardButton) {
+  var newCard = "";
+  if ($(cardButton).attr("data-card") === "") {
+    newCard = "phase1";
+  } else if ($(cardButton).attr("data-card") === "phase1") {
+    newCard = "phase2";
+  } else if ($(cardButton).attr("data-card") === "phase2") {
+    newCard = "phase3";
+  }
+  websocket.send("autoPhase", {Alliance: $(cardButton).attr("data-alliance"),
+      TeamId: parseInt($(cardButton).attr("data-card-team")), Card: newCard});
+  $(cardButton).attr("data-card", newCard);
+};
 
 
 // Signals the scorekeeper that foul entry is complete for this match.

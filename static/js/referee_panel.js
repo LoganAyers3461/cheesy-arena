@@ -62,6 +62,10 @@ var signalVolunteers = function() {
   websocket.send("signalVolunteers");
 };
 
+var signalReview = function() {
+  websocket.send("matchReview");
+}
+
 // Sends a websocket message to signal to the teams that they may enter the field.
 var signalReset = function() {
   websocket.send("signalReset");

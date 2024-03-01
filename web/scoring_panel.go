@@ -166,7 +166,7 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			}
 			web.arena.ScoringPanelRegistry.SetScoreCommitted(alliance, ws)
 			web.arena.ScoringStatusNotifier.Notify()
-		} else if !web.arena.Plc.IsEnabled() {
+		} else {
 			switch strings.ToUpper(command) {
 			case "Q":
 				web.arena.RedRealtimeScore.CurrentScore.AutoPoints -= game.RefereeAutoPointsAwarded
@@ -214,6 +214,53 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 
 				web.arena.RealtimeScoreNotifier.Notify()
 
+			}
+
+		}
+
+		if command == "autoPhase" {
+			args := struct {
+				Alliance string
+				TeamId   int
+				Card     string
+			}{}
+			err = mapstructure.Decode(data, &args)
+			if err != nil {
+				ws.WriteError(err.Error())
+				continue
+			}
+			switch args.Card {
+			case "":
+				if args.Alliance == "red" {
+					web.arena.RedRealtimeScore.CurrentScore.AutoPoints -= game.AutoPhaseThreePointsAwarded + game.AutoPhaseTwoPointsAwarded + game.AutoPhaseOnePointsAwarded
+				} else {
+					web.arena.BlueRealtimeScore.CurrentScore.AutoPoints -= game.AutoPhaseThreePointsAwarded + game.AutoPhaseTwoPointsAwarded + game.AutoPhaseOnePointsAwarded
+				}
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "phase1":
+				if args.Alliance == "red" {
+					web.arena.RedRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseOnePointsAwarded
+				} else {
+					web.arena.BlueRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseOnePointsAwarded
+				}
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "phase2":
+				if args.Alliance == "red" {
+					web.arena.RedRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseTwoPointsAwarded
+				} else {
+					web.arena.BlueRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseTwoPointsAwarded
+				}
+				web.arena.RealtimeScoreNotifier.Notify()
+
+			case "phase3":
+				if args.Alliance == "red" {
+					web.arena.RedRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseThreePointsAwarded
+				} else {
+					web.arena.BlueRealtimeScore.CurrentScore.AutoPoints += game.AutoPhaseThreePointsAwarded
+				}
+				web.arena.RealtimeScoreNotifier.Notify()
 			}
 
 		}

@@ -149,6 +149,12 @@ html {
   top: 30px;
   height: 90px;
 }
+#ref {
+  position: relative;
+  top: 30px;
+  height: 90px;
+  margin: auto;
+}
 #matchTime {
   position: relative;
   top: 1px;

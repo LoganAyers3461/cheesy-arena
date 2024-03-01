@@ -83,18 +83,13 @@ func (web *Web) settingsPostHandler(w http.ResponseWriter, r *http.Request) {
 	eventSettings.PauseDurationSec, _ = strconv.Atoi(r.PostFormValue("pauseDurationSec"))
 	eventSettings.TeleopDurationSec, _ = strconv.Atoi(r.PostFormValue("teleopDurationSec"))
 	eventSettings.WarningRemainingDurationSec, _ = strconv.Atoi(r.PostFormValue("warningRemainingDurationSec"))
-	eventSettings.QuintetThreshold, _ = strconv.Atoi(r.PostFormValue("quintetThreshold"))
-	eventSettings.CargoBonusRankingPointThresholdWithoutQuintet, _ =
-		strconv.Atoi(r.PostFormValue("cargoBonusRankingPointThresholdWithoutQuintet"))
-	eventSettings.CargoBonusRankingPointThresholdWithQuintet, _ =
-		strconv.Atoi(r.PostFormValue("cargoBonusRankingPointThresholdWithQuintet"))
-	eventSettings.HangarBonusRankingPointThreshold, _ =
-		strconv.Atoi(r.PostFormValue("hangarBonusRankingPointThreshold"))
-	eventSettings.DoubleBonusRankingPointThreshold, _ =
-		strconv.Atoi(r.PostFormValue("doubleBonusRankingPointThreshold"))
 
 	eventSettings.FoulPointsAwarded, _ = strconv.Atoi(r.PostFormValue("foulPointsAwarded"))
 	eventSettings.TechFoulPointsAwarded, _ = strconv.Atoi(r.PostFormValue("techFoulPointsAwarded"))
+
+	eventSettings.AutoPhaseOnePointsAwarded, _ = strconv.Atoi(r.PostFormValue("autoPhaseOnePointsAwarded"))
+	eventSettings.AutoPhaseTwoPointsAwarded, _ = strconv.Atoi(r.PostFormValue("autoPhaseTwoPointsAwarded"))
+	eventSettings.AutoPhaseThreePointsAwarded, _ = strconv.Atoi(r.PostFormValue("autoPhaseThreePointsAwarded"))
 
 	eventSettings.RefereeAutoPointsAwarded, _ = strconv.Atoi(r.PostFormValue("refereeAutoPointsAwarded"))
 	eventSettings.RefereeTelePointsAwarded, _ = strconv.Atoi(r.PostFormValue("refereeTelePointsAwarded"))

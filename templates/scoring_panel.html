@@ -42,9 +42,7 @@
     width: min-content;
   }
 
-  .btn-referee:active {
-    background-color: darkgreen;
-  }
+
 
   </style>
 
@@ -68,8 +66,12 @@
                 {{template "card" dict "team" .Red2 "alliance" "red" "cards" .RedCards}}
                 {{template "card" dict "team" .Red3 "alliance" "red" "cards" .RedCards}}
                 </div>
-
+                
                 <div id="redScoreButtons" style="flex-flow:row; flex-wrap: wrap; ">
+                  <label>
+                    Has Achieved Rank Point 1
+                    <input type="checkbox" name="rankPoint1"></input>
+                  </label>
                   <!-- <div class="team">Auto</div> -->
                   {{template "goal" dict "period" "Auto" "level" "Upper" "plus" "W" "minus" "Q"}}
 
@@ -80,14 +82,15 @@
                   {{template "goal" dict "period" "Endgame" "level" "Upper" "plus" "X" "minus" "Z"}}
                 </div>
 
+
+
                 <div id="foulButtons"> 
                 {{range $rule := .Rules}}
                   <a class="btn btn-xl btn-primary btn-referee"
                       data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)" 
                       title="{{$rule.Description}}"
                       data-alliance="red">
-                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
-                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                    {{$rule.RuleNumber}}
                   </a>
                   {{end}}
                 </div>
@@ -125,8 +128,7 @@
                       data-rule-id="{{$rule.Id}}" onclick="commitFoul(this)"
                       title="{{$rule.Description}}"
                       data-alliance="blue">
-                    {{$rule.RuleNumber}}{{if $rule.IsTechnical}}
-                    {{else if $rule.IsRankingPoint}}<sup>RP</sup>{{end}}
+                    {{$rule.RuleNumber}}
                   </a>
                 {{end}}
                   </div>
@@ -161,8 +163,8 @@
 </html>
 
 {{define "card"}}
-  <div class="btn team robot-field btn-card" data-old-yellow-card="{{.team.YellowCard}}" data-alliance="{{.alliance}}"
-      data-card-team="{{.team.Id}}" data-card="{{index .cards (print .team.Id)}}"
+  <div class="btn team robot-field btn-card" data-alliance="{{.alliance}}"
+      data-card-team="{{.team.Id}}" onclick="cycleAutoPhase(this);" data-card="{{index .cards (print .team.Id)}}"
       >{{.team.Id}}</div><br />
 {{end}}
 

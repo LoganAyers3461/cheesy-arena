@@ -39,6 +39,7 @@ const bracketLogoScale = 0.75;
 
 // Handles a websocket message to change which screen is displayed.
 var handleAudienceDisplayMode = function(targetScreen) {
+  console.log(targetScreen);
   transitionQueue.push(targetScreen);
   executeTransitionQueue();
 };
@@ -85,6 +86,9 @@ const executeTransitionQueue = function() {
 // Handles a websocket message to update the teams for the current match.
 var handleMatchLoad = function(data) {
   currentMatch = data.Match;
+  document.getElementById("matchCircle").style.backgroundColor = "white";
+  document.getElementById("logo").style.display = "inline";
+  document.getElementById("ref").style.display = "none";
   $("#" + redSide + "Team1").text(currentMatch.Red1);
   $("#" + redSide + "Team2").text(currentMatch.Red2);
   $("#" + redSide + "Team3").text(currentMatch.Red3);
@@ -148,15 +152,32 @@ var handleRealtimeScore = function(data) {
   $("#" + blueSide + "CargoNumerator").text(data.Blue.ScoreSummary.CargoCount);
   $("#" + blueSide + "CargoDenominator").text(data.Blue.ScoreSummary.CargoGoal);
   if (currentMatch.Type === "elimination") {
-    $("#" + redSide + "CargoDenominator").hide();
-    $("#" + blueSide + "CargoDenominator").hide();
-    $(".cargo-splitter").hide();
+    $("#" + redSide + "RPOne").hide();
+    $("#" + redSide + "RPTwo").hide();
+    $("#" + blueSide + "RPOne").hide();
+    $("#" + blueSide + "RPTwo").hide();
   } else {
-    $("#" + redSide + "CargoDenominator").show();
-    $("#" + blueSide + "CargoDenominator").show();
-    $(".cargo-splitter").show();
+    $("#" + redSide + "RPOne").show();
+    $("#" + redSide + "RPTwo").show();
+    $("#" + blueSide + "RPOne").show();
+    $("#" + blueSide + "RPTwo").show();
   }
 };
+
+var handleMatchReview = function(callback){
+  console.log("recieved message that match is under review");
+  document.getElementById("matchCircle").style.backgroundColor = "yellow";
+  document.getElementById("logo").style.display = "none";
+  document.getElementById("ref").style.display = "inline";
+  callback();
+}
+
+var exitMatchReview = function(){
+  console.log("recieved message to exit match under review");
+  document.getElementById("matchCircle").style.backgroundColor = "white";
+  document.getElementById("logo").style.display = "inline";
+  document.getElementById("ref").style.display = "none";
+}
 
 // Handles a websocket message to populate the final score data.
 var handleScorePosted = function(data) {
@@ -175,8 +196,8 @@ var handleScorePosted = function(data) {
   $("#" + redSide + "FinalCargoBonusRankingPoint").attr("data-checked", data.RedScoreSummary.CargoBonusRankingPoint);
   $("#" + redSide + "FinalHangarBonusRankingPoint").html(data.RedScoreSummary.HangarBonusRankingPoint ? "&#x2714;" : "&#x2718;");
   $("#" + redSide + "FinalHangarBonusRankingPoint").attr("data-checked", data.RedScoreSummary.HangarBonusRankingPoint);
-  $("#" + redSide + "FinalDoubleBonusRankingPoint").html(data.RedScoreSummary.DoubleBonusRankingPoint ? "&#x2714;" : "&#x2718;");
-  $("#" + redSide + "FinalDoubleBonusRankingPoint").attr("data-checked", data.RedScoreSummary.DoubleBonusRankingPoint);
+  // $("#" + redSide + "FinalDoubleBonusRankingPoint").html(data.RedScoreSummary.DoubleBonusRankingPoint ? "&#x2714;" : "&#x2718;");
+  // $("#" + redSide + "FinalDoubleBonusRankingPoint").attr("data-checked", data.RedScoreSummary.DoubleBonusRankingPoint);
   $("#" + blueSide + "FinalScore").text(data.BlueScoreSummary.Score);
   $("#" + blueSide + "FinalTeam1").html(getRankingText(data.Match.Blue1, data.Rankings) + "" + data.Match.Blue1);
   $("#" + blueSide + "FinalTeam2").html(getRankingText(data.Match.Blue2, data.Rankings) + "" + data.Match.Blue2);
@@ -192,8 +213,8 @@ var handleScorePosted = function(data) {
   $("#" + blueSide + "FinalCargoBonusRankingPoint").attr("data-checked", data.BlueScoreSummary.CargoBonusRankingPoint);
   $("#" + blueSide + "FinalHangarBonusRankingPoint").html(data.BlueScoreSummary.HangarBonusRankingPoint ? "&#x2714;" : "&#x2718;");
   $("#" + blueSide + "FinalHangarBonusRankingPoint").attr("data-checked", data.BlueScoreSummary.HangarBonusRankingPoint);
-  $("#" + blueSide + "FinalDoubleBonusRankingPoint").html(data.BlueScoreSummary.DoubleBonusRankingPoint ? "&#x2714;" : "&#x2718;");
-  $("#" + blueSide + "FinalDoubleBonusRankingPoint").attr("data-checked", data.BlueScoreSummary.DoubleBonusRankingPoint);
+  // $("#" + blueSide + "FinalDoubleBonusRankingPoint").html(data.BlueScoreSummary.DoubleBonusRankingPoint ? "&#x2714;" : "&#x2718;");
+  // $("#" + blueSide + "FinalDoubleBonusRankingPoint").attr("data-checked", data.BlueScoreSummary.DoubleBonusRankingPoint);
   $("#finalSeriesStatus").text(data.SeriesStatus);
   $("#finalSeriesStatus").attr("data-leader", data.SeriesLeader);
   $("#finalMatchName").text(data.MatchType + " " + data.Match.DisplayName);
@@ -477,18 +498,13 @@ var transitionIntroToMatch = function(callback) {
 };
 
 var transitionIntroToTimeout = function(callback) {
-  $("#eventMatchInfo").transition({queue: false, height: eventMatchInfoUp}, 500, "ease", function() {
-    $("#eventMatchInfo").hide();
-    $(".score").transition({queue: false, width: scoreIn}, 500, "ease", function() {
-      $(".avatars").css("opacity", 0);
-      $(".avatars").hide();
-      $(".teams").hide();
+
       $("#matchTime").transition({queue: false, top: -35}, 750, "ease");
       $("#logo").transition({queue: false, opacity: 0}, 500, "ease", function() {
         $("#matchTime").transition({queue: false, opacity: 1}, 750, "ease", callback);
       });
-    });
-  });
+  
+  
 };
 
 var transitionLogoToBlank = function(callback) {
@@ -590,6 +606,18 @@ var transitionMatchToIntro = function(callback) {
       $(".avatars").transition({queue: false, opacity: 1}, 500, "ease", callback);
     });
   });
+};
+
+var transitionMatchToTimeout = function(callback) {
+  $(".score-number").transition({queue: false, opacity: 0}, 300, "linear");
+  $(".score-fields").transition({queue: false, opacity: 0}, 300, "ease");
+    $(".score-fields").transition({queue: false, width: 0}, 500, "ease");
+    $(".score").transition({queue: false, width: scoreMid}, 500, "ease", function() {
+      $(".score-fields").hide();
+      $(".avatars").css("display", "flex");
+      $(".avatars").transition({queue: false, opacity: 1}, 500, "ease", callback);
+    });
+
 };
 
 var transitionScoreToBlank = function(callback) {
@@ -773,7 +801,7 @@ $(function() {
     matchTiming: function(event) { handleMatchTiming(event.data); },
     playSound: function(event) { handlePlaySound(event.data); },
     realtimeScore: function(event) { handleRealtimeScore(event.data); },
-    scorePosted: function(event) { handleScorePosted(event.data); }
+    scorePosted: function(event) { handleScorePosted(event.data); },
   });
 
 
@@ -795,6 +823,8 @@ $(function() {
       score: transitionBlankToScore,
       sponsor: transitionBlankToSponsor,
       timeout: transitionBlankToTimeout,
+      matchReview: handleMatchReview,
+      
     },
     bracket: {
       blank: transitionBracketToBlank,
@@ -802,11 +832,15 @@ $(function() {
       logoLuma: transitionBracketToLogoLuma,
       score: transitionBracketToScore,
       sponsor: transitionBracketToSponsor,
+      matchReview: handleMatchReview,
+      
     },
     intro: {
       blank: transitionIntroToBlank,
       match: transitionIntroToMatch,
       timeout: transitionIntroToTimeout,
+      matchReview: handleMatchReview,
+      
     },
     logo: {
       blank: transitionLogoToBlank,
@@ -814,16 +848,24 @@ $(function() {
       logoLuma: transitionLogoToLogoLuma,
       score: transitionLogoToScore,
       sponsor: transitionLogoToSponsor,
+      matchReview: handleMatchReview,
+      
     },
     logoLuma: {
       blank: transitionLogoLumaToBlank,
       bracket: transitionLogoLumaToBracket,
       logo: transitionLogoLumaToLogo,
       score: transitionLogoLumaToScore,
+      matchReview: handleMatchReview,
+      
     },
     match: {
       blank: transitionMatchToBlank,
       intro: transitionMatchToIntro,
+      timeout: transitionMatchToTimeout,
+      matchReview: handleMatchReview,
+      
+      
     },
     score: {
       blank: transitionScoreToBlank,
@@ -831,16 +873,29 @@ $(function() {
       logo: transitionScoreToLogo,
       logoLuma: transitionScoreToLogoLuma,
       sponsor: transitionScoreToSponsor,
+      matchReview: handleMatchReview,
+      
     },
     sponsor: {
       blank: transitionSponsorToBlank,
       bracket: transitionSponsorToBracket,
       logo: transitionSponsorToLogo,
       score: transitionSponsorToScore,
+      matchReview: handleMatchReview,
+      
     },
     timeout: {
       blank: transitionTimeoutToBlank,
       intro: transitionTimeoutToIntro,
+      matchReview: handleMatchReview,
+      
     },
+    matchReview: {
+      blank: transitionIntroToBlank,
+      match: transitionIntroToMatch,
+      timeout: transitionIntroToTimeout,
+      into: exitMatchReview,
+      
+    }
   }
 });

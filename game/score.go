@@ -16,6 +16,10 @@ type Score struct {
 var FoulPointsAwarded = 4
 var TechFoulPointsAwarded = 8
 
+var AutoPhaseOnePointsAwarded = 1
+var AutoPhaseTwoPointsAwarded = 2
+var AutoPhaseThreePointsAwarded = 3
+
 var RefereeAutoPointsAwarded = 1
 var RefereeTelePointsAwarded = 1
 var RefereeEndPointsAwarded = 1

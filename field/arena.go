@@ -42,6 +42,7 @@ const (
 	PostMatch
 	TimeoutActive
 	PostTimeout
+	MatchReview
 )
 
 type Arena struct {
@@ -169,6 +170,10 @@ func (arena *Arena) LoadSettings() error {
 
 	game.FoulPointsAwarded = settings.FoulPointsAwarded
 	game.TechFoulPointsAwarded = settings.TechFoulPointsAwarded
+
+	game.AutoPhaseOnePointsAwarded = settings.AutoPhaseOnePointsAwarded
+	game.AutoPhaseTwoPointsAwarded = settings.AutoPhaseTwoPointsAwarded
+	game.AutoPhaseThreePointsAwarded = settings.AutoPhaseThreePointsAwarded
 
 	game.RefereeAutoPointsAwarded = settings.RefereeAutoPointsAwarded
 	game.RefereeTelePointsAwarded = settings.RefereeTelePointsAwarded

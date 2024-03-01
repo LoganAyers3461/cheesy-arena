@@ -314,14 +314,39 @@
       
         </fieldset>
         <fieldset>
-          <legend>Referree Panels</legend>
-          <p>This section controls the number of points awared when a Referee presses the + or - buttons on their panel in each of the 3 categories</p>
+          <legend>Scoring Configuration</legend>
+          <p>This section controls the number of points awared when a Referee presses the various score buttons on their panels</p><p>Note: Auto Phases are added together, if one phase does not stack with another, ensure to adjust the point value to reflect that</p>
+          <div class="form-group">
+            <label class="col-lg-5 control-label">Autonomous Phase 1</label>
+            <div class="col-lg-7">
+              <input type="text" class="form-control"
+                  name="autoPhaseOnePointsAwarded" value="{{.AutoPhaseOnePointsAwarded}}">
+            </div>
+            <p>How many points should a robot recieve if it completes a phase 1 of auto (usually called mobility points)</p>
+        </div>
+        <div class="form-group">
+          <label class="col-lg-5 control-label">Autonomous Phase 2</label>
+          <div class="col-lg-7">
+            <input type="text" class="form-control"
+                name="autoPhaseTwoPointsAwarded" value="{{.AutoPhaseTwoPointsAwarded}}">
+          </div>
+          <p>How many points should a robot recieve if it completes a phase 2 of auto (called Dock but not engaged in 2023)</p>
+      </div>
+      <div class="form-group">
+        <label class="col-lg-5 control-label">Autonomous Phase 3</label>
+        <div class="col-lg-7">
+          <input type="text" class="form-control"
+              name="autoPhaseThreePointsAwarded" value="{{.AutoPhaseThreePointsAwarded}}">
+        </div>
+        <p>How many points should a robot recieve if it completes a phase 3 of auto (called Dock and Engaged in 2023)</p>
+    </div>
           <div class="form-group">
             <label class="col-lg-5 control-label">Autonomous Points</label>
             <div class="col-lg-7">
               <input type="text" class="form-control"
                   name="refereeAutoPointsAwarded" value="{{.RefereeAutoPointsAwarded}}">
             </div>
+            <p>How many points should a robot recieve if it places a game piece in auto (usually doubled from teleop)</p>
         </div>
         <div class="form-group">
           <label class="col-lg-5 control-label">Teleoperated Points</label>

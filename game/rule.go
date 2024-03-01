@@ -17,6 +17,7 @@ type Rule struct {
 var rules = []*Rule{
 	{1, "Foul", false, false, "Add Foul"},
 	{2, "Tech", true, false, "Add Tech Foul"},
+	{3, "RP", false, true, "Add RP"},
 }
 var ruleMap map[int]*Rule
 

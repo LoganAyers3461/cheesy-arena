@@ -160,3 +160,24 @@ body {
   font-size: 1vw;
 }
 
+.btn-card[data-card="phase1"] {
+  background-color: rgb(0, 92, 15);
+  color: rgb(255, 255, 255);
+  stroke: #222;
+  stroke-width: 0.3px;
+  text-decoration: black;
+}
+.btn-card[data-card="phase2"] {
+  background-color: #458b3e;
+}
+.btn-card[data-card="phase3"] {
+  background-color: #15ff00;
+}
+.btn-card[data-old-yellow-card="true"] {
+  border: 5px solid #ff0;
+  margin: 0px 5px;
+}
+
+.btn-referee:active {  
+  background: rgb(255, 127, 127);
+}
